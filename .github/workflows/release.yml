@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v[0-9]+.*
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: "The version to deploy"
+        required: true
+
+permissions:
+  contents: write
+  id-token: write
+  actions: write
+
+jobs:
+  build-deb:
+    name: Build Debian Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Build .deb package
+        run: cargo deb
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v3
+        with:
+          files: target/debian/*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
