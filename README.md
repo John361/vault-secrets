@@ -59,5 +59,22 @@ cargo build --release
 cargo deb
 ```
 
+## Installation
+```shell
+curl -fsSL  | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/vault-secrets.gpg
+cat << EOF > /etc/apt/sources.list.d/vault-secrets.sources 
+Types: deb
+URIs: https://john361.github.io/vault-secrets/
+Suites: stable
+Components: main
+Signed-By: /etc/apt/trusted.gpg.d/vault-secrets.gpg
+EOF
+
+sudo apt update
+sudo apt install vault-secrets
+
+cat /etc/vault-secrets/app.conf.yml # And replace information
+```
+
 ## Helpers
 - Generate a random password: `tr -dc A-Za-z0-9 </dev/urandom | head -c "20" ; echo ''`
