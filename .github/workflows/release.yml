@@ -63,6 +63,7 @@ jobs:
           echo "Using GPG Key ID: ${GPG_KEY_ID}"
           sed -i "s/SignWith: yes/SignWith: ${GPG_KEY_ID}/" public/conf/distributions
           reprepro -b public -S utils includedeb stable target/debian/*.deb
+          cp vault-secrets.gpg public/
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
