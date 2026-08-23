@@ -25,4 +25,23 @@ uv sync
 source .venv/bin/activate
 
 python vault-init-credentials.py --app-name vault-secrets --environment dev
+
+# Terraform / Terragrunt
+echo "postgresql://terraform:changeme@127.0.0.1:5432/terraform?sslmode=disable" >> ops/terraform/.postgres_backend_uri_dev
+
+cd ops/terraform/modules/dev
+export VAULT_TOKEN="changeme"
+
+cd vault/secret-engine-kv
+terragrunt init
+terragrunt plan && terragrunt apply --auto-approve
+
+cd vault/init-credentials
+terragrunt plan && terragrunt apply --auto-approve
+
+cd vault/auth-backend-userpass
+terragrunt plan && terragrunt apply --auto-approve
 ```
+
+## Helpers
+- Generate a random password: `tr -dc A-Za-z0-9 </dev/urandom | head -c "20" ; echo ''`

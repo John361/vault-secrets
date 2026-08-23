@@ -9,11 +9,16 @@ logs/
 data/
 .env/
 .venv/
+.terragrunt-cache/
+.terraform/
 
 # Files
 .env
 app.conf.yml
 *.log
+ops/terraform/utils/json/*.json
+terraform.tfstate
+.postgres_backend_uri*
 
 # System files
 .DS_Store
