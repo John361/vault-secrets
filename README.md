@@ -1,4 +1,5 @@
 # Vault Secrets
+Vault Secrets is a simple CLI app written in Rust that get a secret from a Vault instance and show it in base64 encoding.
 
 ## Requirements
 ```shell
@@ -16,6 +17,8 @@ cd ops/docker
 
 mkdir -p data/vault
 sudo chown root:root -R data/vault && sudo chmod 777 -R data/vault # Fix for error when starting docker container
+
+cp .env.template .env # Then replace all 'changeme' values (check on helpers section for random password generation)
 
 docker compose up --build # Access and configure Vault from the web ui (use only 1 key for simplicity)
 
@@ -40,6 +43,11 @@ terragrunt plan && terragrunt apply --auto-approve
 
 cd vault/auth-backend-userpass
 terragrunt plan && terragrunt apply --auto-approve
+
+# Rust
+cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
+
+RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault-secrets" --key "username"
 ```
 
 ## Helpers
