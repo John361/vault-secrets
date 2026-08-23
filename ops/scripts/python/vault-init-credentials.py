@@ -14,7 +14,12 @@ def generate_password(length=20):
 
 
 def passwords_from_docker_env(app_name, path):
-    raise ValueError("Not implemented")
+    if path == "postgres/users/admin":
+        return os.environ.get("POSTGRES_PASSWORD")
+    elif path == "postgres/users/terraform":
+        return os.environ.get("TERRAFORM_DB_PASSWORD")
+    else:
+        raise ValueError("Path not found")
 
 
 def main():

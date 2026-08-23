@@ -21,3 +21,27 @@ services:
     command: server
     cap_add:
       - IPC_LOCK
+
+  postgres:
+    image: postgres:18.4-alpine
+    container_name: "postgres"
+    hostname: postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: Indian/Reunion
+      LANG: fr_FR.utf8
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+      - ./postgres/scripts:/docker-entrypoint-initdb.d:ro
+    restart: no
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${TERRAFORM_DB_NAME} -U $${TERRAFORM_DB_USER}" ]
+      start_period: 20s
+      interval: 30s
+      retries: 5
+      timeout: 10s
