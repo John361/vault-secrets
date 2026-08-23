@@ -1,0 +1,18 @@
+# IDE
+.idea/
+.vscode/
+
+# App folders
+target/
+tmp/
+logs/
+data/
+
+# Files
+.env
+app.conf.yml
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
