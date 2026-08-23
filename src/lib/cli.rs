@@ -7,15 +7,29 @@ use clap::Parser;
     name = "vault-secrets",
     bin_name = "vault-secrets"
 )]
-pub enum Cli {
-    #[command(about = "Find secret")]
-    Find(FindArgs),
+pub struct Cli {
+    #[command(subcommand)]
+    pub command: Commands,
+
+    #[arg(
+        short = 'c',
+        long = "config",
+        required = true,
+        help = "Path to config file (required)"
+    )]
+    pub config: String,
 }
 
 impl Cli {
     pub fn load() -> Self {
         Cli::parse()
     }
+}
+
+#[derive(Parser)]
+pub enum Commands {
+    #[command(about = "Find secret")]
+    Find(FindArgs),
 }
 
 #[derive(Args, Debug)]

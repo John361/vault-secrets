@@ -1,4 +1,4 @@
-use lib_vault_secrets::cli::Cli;
+use lib_vault_secrets::cli::{Cli, Commands};
 use lib_vault_secrets::config::AppConfig;
 use lib_vault_secrets::vault::VaultClient;
 
@@ -6,13 +6,12 @@ use lib_vault_secrets::vault::VaultClient;
 async fn main() {
     init_tracing();
 
-    let config = AppConfig::load("app.conf.yml").unwrap(); // TODO: load path with cli
+    let cli = Cli::load();
+    let config = AppConfig::load(&cli.config).unwrap();
     let vault_client = VaultClient::new(config.vault).await;
 
-    let cli = Cli::load();
-
-    match cli {
-        Cli::Find(args) => {
+    match cli.command {
+        Commands::Find(args) => {
             let result = vault_client.find(&args.path, &args.key).await.unwrap();
             tracing::info!("{:#?}", result);
         }
