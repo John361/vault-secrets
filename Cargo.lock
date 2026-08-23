@@ -1970,7 +1970,6 @@ dependencies = [
  "clap",
  "config",
  "serde",
- "serde_json",
  "tokio",
  "tracing",
  "tracing-subscriber",
