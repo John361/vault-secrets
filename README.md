@@ -33,7 +33,6 @@ cd ops/terraform/modules/dev
 export VAULT_TOKEN="changeme"
 
 cd vault/secret-engine-kv
-terragrunt init
 terragrunt plan && terragrunt apply --auto-approve
 
 cd vault/init-credentials
