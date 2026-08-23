@@ -13,7 +13,7 @@ async fn main() {
     match cli.command {
         Commands::Find(args) => {
             let result = vault_client.find(&args.path, &args.key).await.unwrap();
-            tracing::info!("{:#?}", result);
+            println!("{result:}")
         }
     }
 }

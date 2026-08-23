@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::ops::Deref;
 
 use anyhow::{Context, Result};
+use base64::Engine;
+use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::kv2;
 use vaultrs_login::engines::userpass::UserpassLogin;
@@ -48,6 +50,8 @@ impl VaultClient {
             .get(key)
             .with_context(|| format!("Key {key:} not found"))?
             .clone();
+
+        let result = STANDARD.encode(result.as_bytes());
 
         tracing::debug!("Key {key:} found");
         Ok(result)
