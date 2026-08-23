@@ -1,6 +1,10 @@
+use lib_vault_secrets::config::AppConfig;
+
 #[tokio::main]
 async fn main() {
     init_tracing();
+
+    let _config = AppConfig::load("app.conf.yml").unwrap(); // TODO: load path with cli
 }
 
 fn init_tracing() {
