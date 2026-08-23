@@ -1,7 +1,13 @@
 [package]
-name = "vault-secrets"
-version = "0.1.0"
-edition = "2024"
+name         = "vault-secrets"
+description  = "Vault Secrets is a simple Rust CLI app that retrieves a secret from a Vault instance and displays it encoded in base64."
+authors      = ["John H"]
+repository   = "https://github.com/John361/vault-secrets"
+readme       = "README.md"
+license-file = "LICENSE"
+version      = "0.1.0"
+edition      = "2024"
+categories   = ["command-line-utilities", "security"]
 
 [[bin]]
 name = "vault-secrets"
@@ -12,19 +18,35 @@ name = "lib_vault_secrets"
 path = "src/lib/lib.rs"
 
 [dependencies]
-anyhow = "1.0.104"
-base64 = "0.23.1"
-clap = {  version = "4.6.6", features = ["derive", "env"] }
-config = { version = "0.15.25", features = ["yaml"] }
-tokio = { version = "1.53.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
-serde = { version = "1.0.229", features = ["std", "derive"] }
-tracing = "0.1.44"
+anyhow             = "1.0.104"
+base64             = "0.23.1"
+clap               = { version = "4.6.6", features = ["derive", "env"] }
+config             = { version = "0.15.25", features = ["yaml"] }
+tokio              = { version = "1.53.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+serde              = { version = "1.0.229", features = ["std", "derive"] }
+tracing            = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
-vaultrs = "0.8.0"
-vaultrs-login = "0.2.4"
-zeroize = { version = "1.9.0", features = ["serde"] }
+vaultrs            = "0.8.0"
+vaultrs-login      = "0.2.4"
+zeroize            = { version = "1.9.0", features = ["serde"] }
 
 [profile.release]
-lto = true
+lto       = true
 opt-level = "z"
-strip = true
+strip     = true
+
+[package.metadata.deb]
+priority     = "optional"
+revision     = ""
+assets       = [
+    {
+        source = "target/release/vault-secrets",
+        dest   = "/usr/bin/vault-secrets",
+        mode   = "755"
+    },
+    {
+        source = "app.conf.template.yml",
+        dest   = "/etc/vault-secrets/app.conf.yml",
+        mode   = "644"
+    }
+]

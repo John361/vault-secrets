@@ -1,5 +1,5 @@
 # Vault Secrets
-Vault Secrets is a simple CLI app written in Rust that get a secret from a Vault instance and show it in base64 encoding.
+Vault Secrets is a simple Rust CLI app that retrieves a secret from a Vault instance and displays it encoded in base64.
 
 ## Requirements
 ```shell
@@ -8,6 +8,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
 brew install terragrunt
+
+rustup update
+cargo install cargo-deb
 ```
 
 ## Start the dev environment
@@ -48,6 +51,12 @@ terragrunt plan && terragrunt apply --auto-approve
 cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
 
 RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault-secrets" --key "username"
+```
+
+## Build app
+```shell
+cargo build --release
+cargo deb
 ```
 
 ## Helpers
