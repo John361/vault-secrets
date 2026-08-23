@@ -5,7 +5,7 @@ authors      = ["John H"]
 repository   = "https://github.com/John361/vault-secrets"
 readme       = "README.md"
 license-file = "LICENSE"
-version      = "0.1.0"
+version      = "0.1.4"
 edition      = "2024"
 categories   = ["command-line-utilities", "security"]
 
@@ -41,12 +41,12 @@ revision     = ""
 assets       = [
     {
         source = "target/release/vault-secrets",
-        dest   = "/usr/bin/vault-secrets",
-        mode   = "755"
+        dest   = "/usr/sbin/vault-secrets",
+        mode   = "700"
     },
     {
         source = "app.conf.template.yml",
         dest   = "/etc/vault-secrets/app.conf.yml",
-        mode   = "644"
+        mode   = "400"
     }
 ]

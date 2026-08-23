@@ -60,8 +60,12 @@ cargo deb
 ```
 
 ## Installation
+### Automatically using Ansible
+[GitHub Project](https://github.com/John361/ansible-vault-secrets)
+
+### Manually using shell
 ```shell
-curl -fsSL  | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/vault-secrets.gpg
+curl -fsSL https://john361.github.io/vault-secrets/vault-secrets.gpg | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/vault-secrets.gpg
 cat << EOF > /etc/apt/sources.list.d/vault-secrets.sources 
 Types: deb
 URIs: https://john361.github.io/vault-secrets/
