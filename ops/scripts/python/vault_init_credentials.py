@@ -43,6 +43,8 @@ def main():
     if not str(output_file).startswith(str(base_dir.resolve())):
         raise ValueError("Invalid output path")
 
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+
     with open(input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
 
