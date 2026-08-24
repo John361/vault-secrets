@@ -62,13 +62,14 @@ jobs:
       - name: Import GPG key and generate APT Repo
         run: |
           sudo apt update && sudo apt install -y reprepro gnupg
-          echo "GPG_KEY=${{ secrets.PRIVATE_GPG_KEY }}" >> $GITHUB_ENV
-          echo "${GPG_KEY}" | gpg --import --batch
+          echo "${PRIVATE_GPG_KEY}" | gpg --import --batch
           GPG_KEY_ID=$(gpg --list-secret-keys --with-colons | grep "^sec" | cut -d: -f5)
           echo "Using GPG Key ID: ${GPG_KEY_ID}"
           sed -i "s/SignWith: yes/SignWith: ${GPG_KEY_ID}/" public/conf/distributions
           reprepro -b public -S utils includedeb stable target/debian/*.deb
           cp vault-secrets.gpg public/
+        env:
+          PRIVATE_GPG_KEY: ${{ secrets.PRIVATE_GPG_KEY }}
 
       - name: Setup Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d
