@@ -33,3 +33,48 @@ impl From<String> for Secret {
         Self::new(s)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_creates_secret() {
+        let secret = Secret::new("my_secret_value".to_string());
+        assert_eq!(&*secret, "my_secret_value");
+    }
+
+    #[test]
+    fn test_debug_masks_value() {
+        let secret = Secret::new("super_secret".to_string());
+
+        assert_eq!(format!("{:?}", secret), "*************");
+        assert_eq!(
+            format!("Secret is: {:?}", secret),
+            "Secret is: *************"
+        );
+    }
+
+    #[test]
+    fn test_deref_allows_string_operations() {
+        let secret = Secret::new("hello_world".to_string());
+
+        assert_eq!(secret.len(), 11);
+        assert!(secret.contains("world"));
+        assert_eq!(&secret[0..5], "hello");
+    }
+
+    #[test]
+    fn test_from_string() {
+        let secret = Secret::from("converted_string".to_string());
+        assert_eq!(&*secret, "converted_string");
+    }
+
+    #[test]
+    fn test_deserialize_from_string() {
+        let json = r#""my_deserialized_secret""#;
+        let secret: Secret = serde_json::from_str(json).unwrap();
+
+        assert_eq!(&*secret, "my_deserialized_secret");
+    }
+}
