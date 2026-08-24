@@ -26,7 +26,7 @@ fn init_tracing() {
                 .add_directive("vaultrs::client=warn".parse().unwrap())
                 .add_directive("rustify=warn".parse().unwrap())
                 .add_directive("reqwest=warn".parse().unwrap())
-                .add_directive("hyper_util=warn".parse().unwrap())
+                .add_directive("hyper_util=warn".parse().unwrap()),
         )
         .init();
 

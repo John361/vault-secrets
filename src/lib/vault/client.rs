@@ -6,8 +6,8 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::kv2;
-use vaultrs_login::engines::userpass::UserpassLogin;
 use vaultrs_login::LoginClient;
+use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::vault::VaultConfig;
 
@@ -24,7 +24,7 @@ impl VaultClient {
                 .build()
                 .unwrap_or_else(|_| panic!("Failed to build Vault")),
         )
-            .unwrap_or_else(|_| panic!("Failed to create Vault client"));
+        .unwrap_or_else(|_| panic!("Failed to create Vault client"));
 
         let login = UserpassLogin {
             username: config.username,

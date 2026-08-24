@@ -34,5 +34,8 @@ jobs:
             -Dsonar.projectKey=John361_vault-secrets
             -Dsonar.organization=john361
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/target/**, **/venv/**
+            -Dsonar.exclusions=**/target/**, **/venv/**, **/node_modules/**, **/*.pb.go
+            -Dsonar.rust.clippy.report_path=clippy.json
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            -Dsonar.terraform.docker.reportPaths=*
           projectBaseDir: .

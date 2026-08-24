@@ -2,11 +2,7 @@ use clap::Args;
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(
-    version,
-    name = "vault-secrets",
-    bin_name = "vault-secrets"
-)]
+#[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
