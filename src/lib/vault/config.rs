@@ -13,7 +13,6 @@ pub struct VaultConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
     use std::ops::Deref;
 
     #[test]

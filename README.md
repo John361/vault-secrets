@@ -1,4 +1,8 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=alert_status)](https://sonarcloud.io/dashboard?id=John361_vault-secrets)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+[![software_quality_security_issues](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=software_quality_security_issues)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+
 
 # Vault Secrets
 A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format.
@@ -14,6 +18,7 @@ Key Features:
 - **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
+- **Continuous Integration:** Automated linting, testing, and formatting checks on every pull request to ensure code quality and prevent regressions
 - **Integration:** Integrates seamlessly with existing automation and CI/CD pipelines
 - **Security:** Continuous code quality and vulnerability scanning integrated via SonarCloud
 
@@ -62,6 +67,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
 brew install terragrunt
+brew install terraform-linters/tap/tflint
 
 rustup update
 cargo install cargo-deb
@@ -111,6 +117,37 @@ terragrunt plan && terragrunt apply --auto-approve
 cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
 
 RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault-secrets" --key "username"
+```
+
+#### Run linters
+```shell
+# Rust
+cargo check --all-targets --all-features
+cargo clippy --all-targets --all-features -- -D warnings
+cargo fmt --all -- --check
+
+# Terraform
+cd ops/terraform/libs
+tflint --config=$(pwd)/.tflint.hcl --recursive --format=default
+
+# Terragrunt
+cd ops/terraform/modules
+terragrunt hcl fmt --check
+
+# Python
+cd ops/scripts/python
+uv run --frozen ruff check --output-format=github .
+uv run --frozen ruff format --check
+```
+
+#### Run tests
+```shell
+# Rust
+cargo test
+
+# Python
+cd ops/scripts/python
+uv run --frozen pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
 ```
 
 ## Building from source
