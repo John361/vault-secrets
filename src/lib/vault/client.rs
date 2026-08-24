@@ -28,7 +28,7 @@ impl RealVaultProvider {
                 .build()
                 .context("Failed to build Vault settings")?,
         )
-            .context("Failed to create Vault client")?;
+        .context("Failed to create Vault client")?;
 
         let login = UserpassLogin {
             username: config.username.clone(),
@@ -97,7 +97,10 @@ mod tests {
 
         mock_provider
             .expect_read_secret()
-            .with(mockall::predicate::eq("secret"), mockall::predicate::eq("my-path"))
+            .with(
+                mockall::predicate::eq("secret"),
+                mockall::predicate::eq("my-path"),
+            )
             .times(1)
             .returning(|_, _| {
                 let mut map = HashMap::new();
@@ -116,34 +119,40 @@ mod tests {
     async fn test_find_key_not_found() {
         let mut mock_provider = MockVaultProvider::new();
 
-        mock_provider
-            .expect_read_secret()
-            .returning(|_, _| {
-                let map = HashMap::new();
-                Ok(map)
-            });
+        mock_provider.expect_read_secret().returning(|_, _| {
+            let map = HashMap::new();
+            Ok(map)
+        });
 
         let client = VaultClient::new(mock_provider, "secret".to_string());
         let result = client.find("my-path", "missing-key").await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Key missing-key not found"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Key missing-key not found")
+        );
     }
 
     #[tokio::test]
     async fn test_find_provider_error() {
         let mut mock_provider = MockVaultProvider::new();
 
-        mock_provider
-            .expect_read_secret()
-            .returning(|_, _| {
-                anyhow::bail!("Vault connection error");
-            });
+        mock_provider.expect_read_secret().returning(|_, _| {
+            anyhow::bail!("Vault connection error");
+        });
 
         let client = VaultClient::new(mock_provider, "secret".to_string());
         let result = client.find("my-path", "my-key").await;
 
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Vault connection error"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Vault connection error")
+        );
     }
 }
