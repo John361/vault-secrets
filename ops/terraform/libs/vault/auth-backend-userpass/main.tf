@@ -4,7 +4,7 @@ resource "vault_auth_backend" "backends" {
 }
 
 # Create simple app policy
-resource "vault_policy" "app-policy" {
+resource "vault_policy" "app_policy" {
   name   = "userpass-${var.app_name}-${var.environment}"
   policy = <<EOT
     path "${var.app_name}-${var.environment}/*" {

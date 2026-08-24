@@ -36,3 +36,27 @@ jobs:
 
       - name: Run cargo test
         run: cargo test --release --all-targets --all-features --verbose
+
+      # Terraform
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@2cffc4b4c60ac87a35cdaa3c6e07485503492827
+        with:
+          tflint_version: v0.64.0
+          cache: true
+
+      - name: Run TFLint
+        run: |
+          tflint --config=$(pwd)/ops/terraform/libs/.tflint.hcl --init
+          tflint --config=$(pwd)/ops/terraform/libs/.tflint.hcl --recursive --format=compact --chdir=ops/terraform/libs --minimum-failure-severity=notice --no-color
+
+      # Terragrunt
+      - name: Setup Terragrunt
+        uses: gruntwork-io/terragrunt-action@8c1d96b76d445fd2e41475a3f0b63dcd1d9cc077
+        with:
+          tg_version: "1.1.3"
+          tofu_version: "1.12.6"
+
+      - name: Run Terragrunt
+        run: |
+          cd ops/terraform/modules
+          terragrunt hcl fmt --check

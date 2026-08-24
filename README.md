@@ -66,6 +66,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 brew tap hashicorp/tap
 brew install hashicorp/tap/terraform
 brew install terragrunt
+brew install terraform-linters/tap/tflint
 
 rustup update
 cargo install cargo-deb
@@ -115,6 +116,17 @@ terragrunt plan && terragrunt apply --auto-approve
 cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
 
 RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault-secrets" --key "username"
+```
+
+#### Run linters
+```shell
+# Terraform
+cd ops/terraform/libs
+tflint --config=$(pwd)/.tflint.hcl --recursive --format=default
+
+# Terragrunt
+cd ops/terraform/modules
+terragrunt hcl fmt --check
 ```
 
 ## Building from source
