@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-import random
+import secrets
 import string
 
 from dotenv import load_dotenv
@@ -10,7 +10,7 @@ from pathlib import Path
 
 def generate_password(length=20):
     characters = string.ascii_letters + string.digits
-    return "".join(random.choice(characters) for _ in range(length))
+    return "".join(secrets.choice(characters) for _ in range(length))
 
 
 def passwords_from_docker_env(app_name, path):
