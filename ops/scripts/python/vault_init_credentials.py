@@ -3,10 +3,9 @@ import json
 import os
 import secrets
 import string
-
-from dotenv import load_dotenv
 from pathlib import Path
 
+from dotenv import load_dotenv
 
 script_base_dir = Path(__file__).resolve().parent
 base_dir = Path(__file__).resolve().parent.parent.parent / "terraform" / "utils"
@@ -36,7 +35,9 @@ def main():
     docker_env_path = script_base_dir / ".." / ".." / "docker" / ".env"
     load_dotenv(dotenv_path=docker_env_path)
 
-    output_file = (base_dir / "json" / f"vault-init-credentials-{args.environment}.json").resolve()
+    output_file = (
+        base_dir / "json" / f"vault-init-credentials-{args.environment}.json"
+    ).resolve()
 
     if not str(input_file).startswith(str(base_dir.resolve())):
         raise ValueError("Invalid input path")
@@ -51,7 +52,9 @@ def main():
     for entry in data:
         if "data" in entry and "password" in entry["data"]:
             try:
-                entry["data"]["password"] = passwords_from_docker_env(args.app_name, entry["path"])
+                entry["data"]["password"] = passwords_from_docker_env(
+                    args.app_name, entry["path"]
+                )
             except ValueError:
                 entry["data"]["password"] = generate_password()
 

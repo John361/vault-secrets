@@ -18,6 +18,7 @@ Key Features:
 - **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
+- **Continuous Integration:** Automated linting, testing, and formatting checks on every pull request to ensure code quality and prevent regressions
 - **Integration:** Integrates seamlessly with existing automation and CI/CD pipelines
 - **Security:** Continuous code quality and vulnerability scanning integrated via SonarCloud
 
@@ -120,6 +121,11 @@ RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault
 
 #### Run linters
 ```shell
+# Rust
+cargo check --all-targets --all-features
+cargo clippy --all-targets --all-features -- -D warnings
+cargo fmt --all -- --check
+
 # Terraform
 cd ops/terraform/libs
 tflint --config=$(pwd)/.tflint.hcl --recursive --format=default
@@ -127,6 +133,21 @@ tflint --config=$(pwd)/.tflint.hcl --recursive --format=default
 # Terragrunt
 cd ops/terraform/modules
 terragrunt hcl fmt --check
+
+# Python
+cd ops/scripts/python
+uv run --frozen ruff check --output-format=github .
+uv run --frozen ruff format --check
+```
+
+#### Run tests
+```shell
+# Rust
+cargo test
+
+# Python
+cd ops/scripts/python
+uv run --frozen pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
 ```
 
 ## Building from source

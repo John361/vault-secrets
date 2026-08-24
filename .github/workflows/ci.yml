@@ -60,3 +60,35 @@ jobs:
         run: |
           cd ops/terraform/modules
           terragrunt hcl fmt --check
+
+      # Python
+      - name: Setup Python
+        uses: actions/setup-python@751276eafca55f10f252026015f43c488f2322ba
+        with:
+          python-version: "3.14"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b
+        with:
+          enable-cache: true
+          cache-dependency-glob: "ops/scripts/python/uv.lock"
+          working-directory: "ops/scripts/python"
+
+      - name: Install python dependencies
+        run: |
+          uv sync --project ops/scripts/python --frozen --no-build
+
+      - name: Run python linter
+        run: |
+          cd ops/scripts/python
+          uv run --frozen ruff check --output-format=github .
+
+      - name: Run python formatting check
+        run: |
+          cd ops/scripts/python
+          uv run --frozen ruff format --check
+
+      - name: Run python tests
+        run: |
+          cd ops/scripts/python
+          uv run --frozen pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
