@@ -55,6 +55,13 @@ impl VaultProvider for RealVaultProvider {
     }
 }
 
+#[async_trait]
+impl VaultProvider for Box<dyn VaultProvider> {
+    async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>> {
+        self.as_ref().read_secret(mount, path).await
+    }
+}
+
 pub struct VaultClient<T: VaultProvider> {
     provider: T,
     mount: String,
