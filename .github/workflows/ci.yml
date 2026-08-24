@@ -81,14 +81,14 @@ jobs:
       - name: Run python linter
         run: |
           cd ops/scripts/python
-          uv run --frozen ruff check --output-format=github .
+          uv run --frozen --no-build ruff check --output-format=github .
 
       - name: Run python formatting check
         run: |
           cd ops/scripts/python
-          uv run --frozen ruff format --check
+          uv run --frozen --no-build ruff format --check
 
       - name: Run python tests
         run: |
           cd ops/scripts/python
-          uv run --frozen pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
+          uv run --frozen --no-build pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
