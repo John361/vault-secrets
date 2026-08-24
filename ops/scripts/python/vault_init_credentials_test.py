@@ -17,11 +17,9 @@ def test_passwords_from_docker_env_postgres():
     with mock.patch.dict(os.environ, {"POSTGRES_PASSWORD": "postgres_pwd"}):
         assert vic.passwords_from_docker_env("app", "postgres/users/admin") == "postgres_pwd"
 
-
 def test_passwords_from_docker_env_terraform():
     with mock.patch.dict(os.environ, {"TERRAFORM_DB_PASSWORD": "tf_pwd"}):
         assert vic.passwords_from_docker_env("app", "postgres/users/terraform") == "tf_pwd"
-
 
 def test_passwords_from_docker_env_unknown_path():
     with pytest.raises(ValueError):
@@ -50,15 +48,16 @@ def setup_dirs(tmp_path, monkeypatch):
     mock_args = mock.Mock()
     mock_args.app_name = "test-app"
     mock_args.environment = "dev"
-    monkeypatch.setattr(vic.argparse, 'ArgumentParser', lambda **kwargs: mock.Mock(parse_args=lambda: mock_args))
+    mock_parser = mock.Mock()
+    mock_parser.parse_args.return_value = mock_args
+    monkeypatch.setattr(vic.argparse, 'ArgumentParser', lambda **kwargs: mock_parser)
 
     return tmp_path, base_dir, input_file, json_dir
 
 
 def test_main_input_path_invalid(tmp_path, monkeypatch):
     monkeypatch.setattr(vic, 'base_dir', tmp_path.resolve())
-    outside_file = tmp_path / ".." / "outside.json"
-    monkeypatch.setattr(Path, 'resolve', lambda self: outside_file.resolve())
+    monkeypatch.setattr(vic, 'input_file', tmp_path.parent / "outside.json")
 
     with pytest.raises(ValueError):
         vic.main()
@@ -66,31 +65,16 @@ def test_main_input_path_invalid(tmp_path, monkeypatch):
 
 def test_main_output_path_invalid(tmp_path, monkeypatch):
     monkeypatch.setattr(vic, 'base_dir', tmp_path.resolve())
+    monkeypatch.setattr(vic, 'output_file', tmp_path.parent / "outside.json")
 
-    with mock.patch.object(vic.argparse, 'ArgumentParser') as mock_parser:
-        mock_args = mock.Mock()
-        mock_args.app_name = "app"
-        mock_args.environment = "dev"
-        mock_parser.return_value.parse_args.return_value = mock_args
+    with pytest.raises(ValueError):
+        vic.main()
 
-        with mock.patch.object(Path, 'resolve', side_effect=lambda self: self):
-            vic.base_dir = tmp_path
-            mock_input = tmp_path / "in.json"
-            mock_input.touch()
-            mock_output = tmp_path.parent / "out.json"
-
-            with mock.patch.object(vic, 'input_file', mock_input), \
-                    mock.patch.object(vic, 'output_file', mock_output):
-                with pytest.raises(ValueError):
-                    vic.main()
-
-
-def test_main_happy_path_with_env(setup_dirs, monkeypatch):
+def test_main_happy_path_with_env(setup_dirs):
     tmp_path, base_dir, input_file, json_dir = setup_dirs
 
-    monkeypatch.setenv("POSTGRES_PASSWORD", "super_secret_pwd")
-
-    vic.main()
+    with mock.patch.dict(os.environ, {"POSTGRES_PASSWORD": "super_secret_pwd"}):
+        vic.main()
 
     output_file = json_dir / "vault-init-credentials-dev.json"
     assert output_file.exists()
@@ -99,10 +83,10 @@ def test_main_happy_path_with_env(setup_dirs, monkeypatch):
     assert data[0]["data"]["password"] == "super_secret_pwd"
     assert data[1]["data"]["password"] != "old_pwd"
 
-def test_main_fallback_to_generated_password(setup_dirs, monkeypatch):
+def test_main_fallback_to_generated_password(setup_dirs):
     tmp_path, base_dir, input_file, json_dir = setup_dirs
 
-    monkeypatch.delenv("POSTGRES_PASSWORD", raising=False)
+    os.environ.pop("POSTGRES_PASSWORD", None)
 
     vic.main()
 
@@ -110,3 +94,4 @@ def test_main_fallback_to_generated_password(setup_dirs, monkeypatch):
     data = json.loads(output_file.read_text())
 
     assert len(data[0]["data"]["password"]) == 20
+    assert len(data[1]["data"]["password"]) == 20
