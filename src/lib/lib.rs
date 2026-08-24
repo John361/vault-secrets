@@ -1,4 +1,5 @@
-pub mod cli;
-pub mod config;
-pub mod secret;
-pub mod vault;
+pub mod app;
+mod cli;
+mod config;
+mod secret;
+mod vault;

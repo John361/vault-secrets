@@ -1,8 +1,4 @@
-use anyhow::Result;
-
-use lib_vault_secrets::cli::{Cli, Commands};
-use lib_vault_secrets::config::AppConfig;
-use lib_vault_secrets::vault::{RealVaultProvider, VaultClient, VaultProvider};
+use lib_vault_secrets::app::run;
 
 #[tokio::main]
 async fn main() {
@@ -12,27 +8,6 @@ async fn main() {
         eprintln!("Error: {e:?}");
         std::process::exit(1);
     }
-}
-
-async fn run() -> Result<()> {
-    let cli = Cli::load();
-    let config = AppConfig::load(&cli.config)?;
-
-    let vault_provider = RealVaultProvider::new(&config.vault).await?;
-    let vault_client = VaultClient::new(vault_provider, config.vault.mount);
-
-    run_with_vault_client(cli, vault_client).await
-}
-
-async fn run_with_vault_client(cli: Cli, vault_client: VaultClient<impl VaultProvider>) -> Result<()> {
-    match cli.command {
-        Commands::Find(args) => {
-            let result = vault_client.find(&args.path, &args.key).await?;
-            println!("{result:}");
-        }
-    }
-
-    Ok(())
 }
 
 fn init_tracing() {
