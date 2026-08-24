@@ -8,6 +8,10 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 
+script_base_dir = Path(__file__).resolve().parent
+base_dir = Path(__file__).resolve().parent.parent.parent / "terraform" / "utils"
+
+
 def generate_password(length=20):
     characters = string.ascii_letters + string.digits
     return "".join(secrets.choice(characters) for _ in range(length))
@@ -28,11 +32,9 @@ def main():
     parser.add_argument("--environment", required=True, help="Environment name")
     args = parser.parse_args()
 
-    script_base_dir = Path(__file__).resolve().parent
     docker_env_path = script_base_dir / ".." / ".." / "docker" / ".env"
     load_dotenv(dotenv_path=docker_env_path)
 
-    base_dir = Path(__file__).resolve().parent.parent.parent / "terraform" / "utils"
     input_file = (base_dir / "templates" / "vault-init-credentials.json").resolve()
     output_file = (base_dir / "json" / f"vault-init-credentials-{args.environment}.json").resolve()
 
