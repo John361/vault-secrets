@@ -20,6 +20,8 @@ app.conf.yml
 ops/terraform/utils/json/*.json
 terraform.tfstate
 .postgres_backend_uri*
+.coverage
+coverage.xml
 
 # System files
 .DS_Store
