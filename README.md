@@ -1,4 +1,8 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=alert_status)](https://sonarcloud.io/dashboard?id=John361_vault-secrets)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+[![software_quality_security_issues](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=software_quality_security_issues)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
+
 
 # Vault Secrets
 A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format.
