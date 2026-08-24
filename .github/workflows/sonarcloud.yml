@@ -21,11 +21,12 @@ jobs:
           fetch-depth: 0
 
       - name: Install Rust toolchain & Clippy
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           components: clippy
+          toolchain: "stable"
 
       - name: Analyze with SonarCloud
-        uses: SonarSource/sonarqube-scan-action@v8.2.1
+        uses: SonarSource/sonarqube-scan-action@ad8210318ac8bb816e41990d5af2b304f7a6c213
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
