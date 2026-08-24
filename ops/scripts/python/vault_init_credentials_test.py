@@ -70,7 +70,7 @@ def test_main_input_path_invalid(tmp_path, monkeypatch):
 
 def test_main_output_path_invalid(tmp_path, monkeypatch):
     monkeypatch.setattr(vic, 'base_dir', tmp_path.resolve())
-    monkeypatch.setattr('sys.argv', ['vault_init_credentials.py', '--app-name', 'test-app', '--environment', '/etc/passwd'])
+    monkeypatch.setattr('sys.argv', ['vault_init_credentials.py', '--app-name', 'test-app', '--environment', '../../../../etc/passwd'])
 
     valid_input = tmp_path / "terraform" / "utils" / "templates" / "vault-init-credentials.json"
     valid_input.parent.mkdir(parents=True)
@@ -110,6 +110,6 @@ def test_main_fallback_to_generated_password(setup_dirs):
 
 
 def test_run_as_main():
-    with mock.patch('sys.argv', ['vault_init_credentials.py', '--app-name', 'test-app', '--environment', 'dev']):
-        with pytest.raises(Exception):
+    with mock.patch('sys.argv', ['vault_init_credentials.py']):
+        with pytest.raises(SystemExit):
             runpy.run_module('vault_init_credentials', run_name='__main__')
