@@ -2,19 +2,29 @@ name: SonarCloud analysis
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
 
 permissions:
-  pull-requests: read # allows SonarCloud to decorate PRs with analysis results
+  pull-requests: read
 
 jobs:
   Analysis:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Install Rust toolchain & Clippy
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
       - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@v5.0.0
         env:
@@ -23,4 +33,6 @@ jobs:
           args:
             -Dsonar.projectKey=John361_vault-secrets
             -Dsonar.organization=john361
+            -Dsonar.sources=.
+            -Dsonar.exclusions=**/target/**, **/venv/**
           projectBaseDir: .
