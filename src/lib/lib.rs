@@ -1,4 +1,7 @@
-pub mod cli;
-pub mod config;
-pub mod secret;
-pub mod vault;
+pub mod app;
+pub mod tracing;
+
+mod cli;
+mod config;
+mod secret;
+mod vault;

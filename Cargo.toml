@@ -1,6 +1,6 @@
 [package]
 name         = "vault-secrets"
-description  = "Vault Secrets is a simple Rust CLI app that retrieves a secret from a Vault instance and displays it encoded in base64."
+description  = "A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format."
 authors      = ["John H"]
 repository   = "https://github.com/John361/vault-secrets"
 readme       = "README.md"
@@ -19,16 +19,22 @@ path = "src/lib/lib.rs"
 
 [dependencies]
 anyhow             = "1.0.104"
+async-trait        = "0.1.92"
 base64             = "0.23.1"
 clap               = { version = "4.6.6", features = ["derive", "env"] }
 config             = { version = "0.15.25", features = ["yaml"] }
 tokio              = { version = "1.53.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
 serde              = { version = "1.0.229", features = ["std", "derive"] }
+serde_json         = "1.0.151"
 tracing            = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 vaultrs            = "0.8.0"
 vaultrs-login      = "0.2.4"
 zeroize            = { version = "1.9.0", features = ["serde"] }
+
+[dev-dependencies]
+mockall  = "0.15.0"
+tempfile = "3.27.0"
 
 [profile.release]
 lto       = true
@@ -36,9 +42,9 @@ opt-level = "z"
 strip     = true
 
 [package.metadata.deb]
-priority     = "optional"
-revision     = ""
-assets       = [
+priority = "optional"
+revision = ""
+assets   = [
     {
         source = "target/release/vault-secrets",
         dest   = "/usr/sbin/vault-secrets",

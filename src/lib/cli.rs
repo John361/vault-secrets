@@ -1,7 +1,7 @@
 use clap::Args;
 use clap::Parser;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
 pub struct Cli {
     #[command(subcommand)]
@@ -18,11 +18,19 @@ pub struct Cli {
 
 impl Cli {
     pub fn load() -> Self {
-        Cli::parse()
+        Self::try_load_from(std::env::args_os()).unwrap_or_else(|e| e.exit())
+    }
+
+    pub fn try_load_from<I, T>(args: I) -> Result<Self, clap::Error>
+    where
+        I: IntoIterator<Item = T>,
+        T: Into<std::ffi::OsString> + Clone,
+    {
+        Cli::try_parse_from(args)
     }
 }
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
 pub enum Commands {
     #[command(about = "Find secret")]
     Find(FindArgs),
@@ -36,4 +44,95 @@ pub struct FindArgs {
 
     #[arg(long, help = "Secret key name (required)", required = true)]
     pub key: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::error::ErrorKind;
+
+    #[test]
+    fn test_cli_load_success() {
+        let args = vec![
+            "vault-secrets",
+            "--config",
+            "/tmp/config.yaml",
+            "find",
+            "--path",
+            "secret/data/mysql",
+            "--key",
+            "password",
+        ];
+
+        let cli = Cli::try_load_from(args).unwrap();
+
+        assert_eq!(cli.config, "/tmp/config.yaml");
+
+        match cli.command {
+            Commands::Find(find_args) => {
+                assert_eq!(find_args.path, "secret/data/mysql");
+                assert_eq!(find_args.key, "password");
+            }
+        }
+    }
+
+    #[test]
+    fn test_cli_missing_config() {
+        let args = vec![
+            "vault-secrets",
+            "find",
+            "--path",
+            "secret/data/mysql",
+            "--key",
+            "password",
+        ];
+
+        let err = Cli::try_load_from(args).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
+    }
+
+    #[test]
+    fn test_cli_missing_subcommand_args() {
+        let args = vec!["vault-secrets", "--config", "/tmp/config.yaml", "find"];
+
+        let err = Cli::try_load_from(args).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
+    }
+
+    #[test]
+    fn test_cli_unknown_command() {
+        let args = vec![
+            "vault-secrets",
+            "--config",
+            "/tmp/config.yaml",
+            "unknown-command",
+        ];
+
+        let err = Cli::try_load_from(args).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::InvalidSubcommand);
+    }
+
+    #[test]
+    fn test_cli_load_uses_parse() {
+        let args = vec![
+            "vault-secrets",
+            "--config",
+            "/tmp/config.yaml",
+            "find",
+            "--path",
+            "secret/data/mysql",
+            "--key",
+            "password",
+        ];
+
+        let cli = Cli::try_load_from(args).unwrap();
+        assert_eq!(cli.config, "/tmp/config.yaml");
+
+        match cli.command {
+            Commands::Find(find_args) => {
+                assert_eq!(find_args.path, "secret/data/mysql");
+                assert_eq!(find_args.key, "password");
+            }
+        }
+    }
 }
