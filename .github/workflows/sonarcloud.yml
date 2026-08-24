@@ -34,12 +34,12 @@ jobs:
 
       - name: Install python dependencies
         run: |
-          uv sync --project ops/scripts/python
+          uv sync --project ops/scripts/python --frozen --no-build
 
       - name: Run Python tests and generate coverage
         run: |
           cd ops/scripts/python
-          uv run pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
+          uv run --frozen --no-build pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
 
       - name: Install Rust toolchain & Clippy
         uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772

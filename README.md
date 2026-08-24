@@ -15,7 +15,7 @@ Key Features:
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
 - **Integration:** Integrates seamlessly with existing automation and CI/CD pipelines
-- **Security:** Pipeline
+- **Security:** Continuous code quality and vulnerability scanning integrated via SonarCloud
 
 ## Installation
 ### Debian/Ubuntu Repository (Recommended)
