@@ -32,11 +32,14 @@ def main():
     docker_env_path = script_base_dir / ".." / ".." / "docker" / ".env"
     load_dotenv(dotenv_path=docker_env_path)
 
-    input_file_name = f"../../terraform/utils/templates/vault-init-credentials.json"
-    output_file_name = f"../../terraform/utils/json/vault-init-credentials-{args.environment}.json"
+    base_dir = Path(__file__).resolve().parent.parent.parent / "terraform" / "utils"
+    input_file = (base_dir / "templates" / "vault-init-credentials.json").resolve()
+    output_file = (base_dir / "json" / f"vault-init-credentials-{args.environment}.json").resolve()
 
-    input_file = os.path.join(os.path.dirname(__file__), input_file_name)
-    output_file = os.path.join(os.path.dirname(__file__), output_file_name)
+    if not str(input_file).startswith(str(base_dir.resolve())):
+        raise ValueError("Invalid input path")
+    if not str(output_file).startswith(str(base_dir.resolve())):
+        raise ValueError("Invalid output path")
 
     with open(input_file, "r", encoding="utf-8") as f:
         data = json.load(f)
