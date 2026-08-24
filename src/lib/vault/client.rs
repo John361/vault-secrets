@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ops::Deref;
 
 use anyhow::{Context, Result};
+use async_trait::async_trait;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
@@ -11,7 +12,7 @@ use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::vault::VaultConfig;
 
-#[async_trait::async_trait]
+#[async_trait]
 pub trait VaultProvider: Send + Sync {
     async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>>;
 }
@@ -46,7 +47,7 @@ impl RealVaultProvider {
     }
 }
 
-#[async_trait::async_trait]
+#[async_trait]
 impl VaultProvider for RealVaultProvider {
     async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>> {
         let result: HashMap<String, String> = kv2::read(&self.client, mount, path).await?;

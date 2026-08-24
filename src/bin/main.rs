@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use lib_vault_secrets::cli::{Cli, Commands};
 use lib_vault_secrets::config::AppConfig;
-use lib_vault_secrets::vault::{RealVaultProvider, VaultClient};
+use lib_vault_secrets::vault::{RealVaultProvider, VaultClient, VaultProvider};
 
 #[tokio::main]
 async fn main() {
@@ -21,6 +21,10 @@ async fn run() -> Result<()> {
     let vault_provider = RealVaultProvider::new(&config.vault).await?;
     let vault_client = VaultClient::new(vault_provider, config.vault.mount);
 
+    run_with_vault_client(cli, vault_client).await
+}
+
+async fn run_with_vault_client(cli: Cli, vault_client: VaultClient<impl VaultProvider>) -> Result<()> {
     match cli.command {
         Commands::Find(args) => {
             let result = vault_client.find(&args.path, &args.key).await?;
