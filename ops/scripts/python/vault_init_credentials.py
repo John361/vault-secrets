@@ -10,6 +10,7 @@ from pathlib import Path
 
 script_base_dir = Path(__file__).resolve().parent
 base_dir = Path(__file__).resolve().parent.parent.parent / "terraform" / "utils"
+input_file = (base_dir / "templates" / "vault-init-credentials.json").resolve()
 
 
 def generate_password(length=20):
@@ -35,7 +36,6 @@ def main():
     docker_env_path = script_base_dir / ".." / ".." / "docker" / ".env"
     load_dotenv(dotenv_path=docker_env_path)
 
-    input_file = (base_dir / "templates" / "vault-init-credentials.json").resolve()
     output_file = (base_dir / "json" / f"vault-init-credentials-{args.environment}.json").resolve()
 
     if not str(input_file).startswith(str(base_dir.resolve())):
