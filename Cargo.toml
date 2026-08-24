@@ -1,6 +1,6 @@
 [package]
 name         = "vault-secrets"
-description  = "Vault Secrets is a simple Rust CLI app that retrieves a secret from a Vault instance and displays it encoded in base64."
+description  = "A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format."
 authors      = ["John H"]
 repository   = "https://github.com/John361/vault-secrets"
 readme       = "README.md"
@@ -32,7 +32,8 @@ vaultrs-login      = "0.2.4"
 zeroize            = { version = "1.9.0", features = ["serde"] }
 
 [dev-dependencies]
-mockall = "0.15.0"
+mockall  = "0.15.0"
+tempfile = "3.27.0"
 
 [profile.release]
 lto       = true
