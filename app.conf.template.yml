@@ -1,5 +1,9 @@
+# Connection information:
+# - You can connect using username / password or with token
+# - By default, username / password is used unless you specify only token
 vault:
   address: "http://127.0.0.1:8200"
   username: "vault-secrets"
   password: "changeme"
+  token: "changeme"
   mount: "vault-secrets-dev"

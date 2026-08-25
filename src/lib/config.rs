@@ -39,7 +39,7 @@ mod tests {
     }
 
     #[test]
-    fn test_load_success() {
+    fn test_load_success_login_password() {
         let config_content = r#"
         vault:
           address: "http://localhost:8200"
@@ -58,8 +58,31 @@ mod tests {
 
         let config = result.unwrap();
         assert_eq!(config.vault.address, "http://localhost:8200");
-        assert_eq!(config.vault.username, "user");
-        assert_eq!(config.vault.password.deref(), "pass");
+        assert_eq!(config.vault.username.unwrap(), "user");
+        assert_eq!(config.vault.password.unwrap().deref(), "pass");
+        assert_eq!(config.vault.mount, "secret");
+    }
+
+    #[test]
+    fn test_load_success_token() {
+        let config_content = r#"
+        vault:
+          address: "http://localhost:8200"
+          token: "token"
+          mount: "secret"
+    "#;
+
+        let temp_file = NamedTempFile::new().unwrap();
+        let path_with_extension = temp_file.path().with_extension("yml");
+        std::fs::write(&path_with_extension, config_content).unwrap();
+
+        let path = path_with_extension.to_str().unwrap();
+        let result = AppConfig::load(path);
+        assert!(result.is_ok());
+
+        let config = result.unwrap();
+        assert_eq!(config.vault.address, "http://localhost:8200");
+        assert_eq!(config.vault.token.unwrap().deref(), "token");
         assert_eq!(config.vault.mount, "secret");
     }
 
