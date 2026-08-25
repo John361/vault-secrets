@@ -106,6 +106,22 @@ impl<T: VaultProvider> VaultClient<T> {
         Ok(encoded)
     }
 
+    pub async fn find_all(&self, path: &str, encode: bool) -> Result<HashMap<String, String>> {
+        let mut result = self
+            .provider
+            .read_secret(&self.mount, path)
+            .await
+            .with_context(|| format!("Path {path} not found"))?;
+
+        if encode {
+            for value in result.values_mut() {
+                *value = STANDARD.encode(value.as_bytes());
+            }
+        }
+
+        Ok(result)
+    }
+
     pub async fn list_paths(&self, path: &str) -> Result<Vec<String>> {
         let result = self
             .provider
@@ -156,6 +172,35 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_find_all_success() {
+        let mut mock_provider = MockVaultProvider::new();
+
+        mock_provider
+            .expect_read_secret()
+            .with(
+                mockall::predicate::eq("secret"),
+                mockall::predicate::eq("my-path"),
+            )
+            .times(1)
+            .returning(|_, _| {
+                let mut map = HashMap::new();
+                map.insert("my-key-1".to_string(), "my-value-1".to_string());
+                map.insert("my-key-2".to_string(), "my-value-2".to_string());
+                Ok(map)
+            });
+
+        let client = VaultClient::new(mock_provider, "secret".to_string());
+        let result = client.find_all("my-path", false).await;
+
+        let mut expected = HashMap::new();
+        expected.insert("my-key-1".to_string(), "my-value-1".to_string());
+        expected.insert("my-key-2".to_string(), "my-value-2".to_string());
+
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), expected);
+    }
+
+    #[tokio::test]
     async fn test_list_paths_success() {
         let mut mock_provider = MockVaultProvider::new();
 
@@ -199,6 +244,26 @@ mod tests {
                 .unwrap_err()
                 .to_string()
                 .contains("Key missing-key not found")
+        );
+    }
+
+    #[tokio::test]
+    async fn test_find_all_not_found() {
+        let mut mock_provider = MockVaultProvider::new();
+
+        mock_provider
+            .expect_read_secret()
+            .returning(|_, _| Err(anyhow::anyhow!("Path my-path not found")));
+
+        let client = VaultClient::new(mock_provider, "secret".to_string());
+        let result = client.find_all("my-path", false).await;
+
+        assert!(result.is_err());
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Path my-path not found")
         );
     }
 

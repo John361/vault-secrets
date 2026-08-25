@@ -48,10 +48,12 @@ impl<T: VaultProvider> VaultBusiness<T> {
     }
 
     async fn read_secret_data(&self, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_data = self.client.find(path, "username").await?; // TODO: fix usage by implementing find_all
+        let raw_data = self.client.find_all(path, false).await?;
         let mut secrets = HashMap::new();
 
-        secrets.insert("value".to_string(), Secret::new(raw_data));
+        for data in raw_data {
+            secrets.insert(data.0, Secret::new(data.1));
+        }
 
         Ok(secrets)
     }
