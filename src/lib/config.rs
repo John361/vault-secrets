@@ -48,15 +48,14 @@ mod tests {
           address: "http://localhost:8200"
           username: "user"
           password: "pass"
+          request_interval_sec: 3
         find:
           mount: "secret"
         export:
-          sleep: 3
           mounts:
             - "secret"
             - "secret-2"
         import:
-          sleep: 3
           mounts:
             - "secret"
             - "secret-2"
@@ -82,15 +81,14 @@ mod tests {
         vault:
           address: "http://localhost:8200"
           token: "token"
+          request_interval_sec: 3
         find:
           mount: "secret"
         export:
-          sleep: 3
           mounts:
             - "secret"
             - "secret-2"
         import:
-          sleep: 3
           mounts:
             - "secret"
             - "secret-2"

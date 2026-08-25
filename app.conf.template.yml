@@ -5,23 +5,23 @@
 # Mount information:
 # - On import command, if the mount paths do not exist, make sure you have enough permissions to create them
 #
-# Sleep information:
+# Request interval information:
+# - Time between each request (for example when importing or exporting massive mounts paths)
 # - Used to avoid rate limiting issues
 vault:
   address: "http://127.0.0.1:8200"
   username: "vault-secrets"
   password: "changeme"
   token: "changeme"
+  request_interval_sec: 3
 
 find:
   mount: "vault-secrets-dev"
 
 export:
-  sleep: 3
   mounts:
     - "vault-secrets-dev"
 
 import:
-  sleep: 3
   mounts:
     - "vault-secrets-tests"

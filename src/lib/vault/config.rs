@@ -8,6 +8,7 @@ pub struct VaultConfig {
     pub username: Option<String>,
     pub password: Option<Secret>,
     pub token: Option<Secret>,
+    pub request_interval_sec: u16,
 }
 
 #[derive(Deserialize)]
@@ -17,13 +18,11 @@ pub struct VaultFindConfig {
 
 #[derive(Deserialize)]
 pub struct VaultExportConfig {
-    pub sleep: u16,
     pub mounts: Vec<String>,
 }
 
 #[derive(Deserialize)]
 pub struct VaultImportConfig {
-    pub sleep: u16,
     pub mounts: Vec<String>,
 }
 
@@ -39,7 +38,8 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "my_secret_password",
-            "token": "my_secret_token"
+            "token": "my_secret_token",
+            "request_interval_sec": 3
         }
         "#;
 
@@ -49,6 +49,7 @@ mod tests {
         assert_eq!(config.username, Some("admin".to_string()));
         assert_eq!(config.password.unwrap().deref(), "my_secret_password");
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
+        assert_eq!(config.request_interval_sec, 3);
     }
 
     #[test]
@@ -68,14 +69,12 @@ mod tests {
     fn test_deserialize_vault_export_config_json() {
         let json = r#"
         {
-            "sleep": 3,
             "mounts": ["my-path-1", "my-path-2"]
         }
         "#;
 
         let config: VaultExportConfig = serde_json::from_str(json).unwrap();
 
-        assert_eq!(config.sleep, 3);
         assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
     }
 
@@ -83,14 +82,12 @@ mod tests {
     fn test_deserialize_vault_import_config_json() {
         let json = r#"
         {
-            "sleep": 3,
             "mounts": ["my-path-1", "my-path-2"]
         }
         "#;
 
         let config: VaultImportConfig = serde_json::from_str(json).unwrap();
 
-        assert_eq!(config.sleep, 3);
         assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
     }
 
@@ -101,7 +98,7 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "changeme",
-            "mount": ["secret"]
+            "request_interval_sec": 3
         }
         "#;
 
@@ -115,7 +112,7 @@ mod tests {
         {
             "address": "http://localhost:8200",
             "token": "changeme",
-            "mount": ["secret"]
+            "request_interval_sec": 3
         }
         "#;
 
@@ -131,6 +128,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: Some(Secret::new("top_secret".to_string())),
             token: None,
+            request_interval_sec: 3,
         };
 
         assert_eq!(config.password.unwrap().deref(), "top_secret");
@@ -143,6 +141,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: None,
             token: Some(Secret::new("top_secret".to_string())),
+            request_interval_sec: 3,
         };
 
         assert_eq!(config.token.unwrap().deref(), "top_secret");
@@ -176,7 +175,7 @@ mod tests {
     fn test_deserialize_vault_export_config_missing_field() {
         let json = r#"
         {
-            "sleep": 3
+
         }
         "#;
 
@@ -188,7 +187,7 @@ mod tests {
     fn test_deserialize_vault_import_config_missing_field() {
         let json = r#"
         {
-            "sleep": 3
+
         }
         "#;
 
