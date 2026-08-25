@@ -5,7 +5,7 @@
 
 
 # Vault Secrets
-A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format.
+A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format (unless the clear output option is provided).
 
 This tool is specifically built for server automation scripts, allowing server administrators to securely retrieve runtime secrets without hardcoding credentials on the host system.
 
@@ -14,7 +14,7 @@ Vault Secrets is designed for server-side scripting scenarios where storing plai
 
 Key Features:
 - **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
-- **Base64 Encoding:** Outputs secrets in base64 format for seamless pipeline and script integration
+- **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
 - **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
@@ -165,7 +165,11 @@ The `.deb` package will be generated in `target/debian/` folder.
 ## Usage
 ### Command syntax
 ```shell
+# Base64 output
 vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
+
+# Clear output
+vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --key <SECRET_KEY>
 ```
 
 ### Example
