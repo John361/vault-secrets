@@ -26,6 +26,8 @@ async fn run_with_vault_client(
             let result = vault_client.find(&args.path, &args.key).await?;
             println!("{result:}");
         }
+
+        Commands::Export(args) => {}
     }
 
     Ok(())
