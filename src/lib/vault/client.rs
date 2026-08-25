@@ -96,7 +96,7 @@ impl VaultClient {
         let mount_exists = mount::list(&self.client)
             .await
             .with_context(|| "Error listing mounts")?
-            .contains_key(mount);
+            .contains_key(&format!("{mount}/"));
 
         if !mount_exists {
             mount::enable(&self.client, mount, "kv-v2", None).await?;
