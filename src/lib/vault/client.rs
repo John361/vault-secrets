@@ -25,16 +25,16 @@ impl VaultClient {
                 .address(config.address.clone())
                 .token(token.deref().to_string())
                 .build()
-                .context("Failed to build Vault settings")?
+                .with_context(|| "Failed to build Vault settings")?
         } else {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
                 .build()
-                .context("Failed to build Vault settings")?
+                .with_context(|| "Failed to build Vault settings")?
         };
 
         let mut client = vaultrs::client::VaultClient::new(client_builder)
-            .context("Failed to create Vault client")?;
+            .with_context(|| "Failed to create Vault client")?;
 
         if let Some(username) = config.username.clone()
             && let Some(password) = config.password.clone()
@@ -47,7 +47,7 @@ impl VaultClient {
             client
                 .login("userpass", &login)
                 .await
-                .context("Failed to login to Vault")?;
+                .with_context(|| "Failed to login to Vault")?;
         }
 
         tracing::debug!("Vault connection initialized");

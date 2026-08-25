@@ -1,5 +1,6 @@
 use clap::Args;
 use clap::Parser;
+use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
@@ -56,6 +57,9 @@ pub struct FindArgs {
 pub struct ExportArgs {
     #[arg(long, help = "Path to secret (required)", required = true)]
     pub path: String,
+
+    #[arg(long, help = "Output file path (required)", required = true)]
+    pub output_file: PathBuf,
 }
 
 #[cfg(test)]
@@ -97,6 +101,8 @@ mod tests {
             "export",
             "--path",
             "secret",
+            "--output-file",
+            "./secret.json"
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -105,6 +111,7 @@ mod tests {
         match cli.command {
             Commands::Export(find_args) => {
                 assert_eq!(find_args.path, "secret");
+                assert_eq!(find_args.output_file, PathBuf::from("./secret.json"));
             }
             _ => {}
         }
@@ -190,6 +197,8 @@ mod tests {
             "export",
             "--path",
             "secret",
+            "--output-file",
+            "./secrets.json"
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -199,6 +208,7 @@ mod tests {
         match cli.command {
             Commands::Export(find_args) => {
                 assert_eq!(find_args.path, "secret");
+                assert_eq!(find_args.output_file, PathBuf::from("./secrets.json"));
             }
             _ => {}
         }

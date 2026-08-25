@@ -1,6 +1,7 @@
 use std::ops::Deref;
+use std::path::PathBuf;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
@@ -36,15 +37,19 @@ impl VaultExportBusiness {
         Ok(Self { client })
     }
 
-    pub async fn export(&self, root_path: &str) -> Result<()> {
-        // TODO: output to file
+    pub async fn export(&self, root_path: &str, output_file: PathBuf) -> Result<()> {
         let result = self
             .export_data(root_path)
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
-        let result = serde_json::to_value(&result)?;
 
-        println!("{:?}", result);
+        let file = std::fs::File::create(&output_file)
+            .with_context(|| format!("Failed to create file: {:?}", output_file))?;
+
+        serde_json::to_writer_pretty(file, &result)
+            .inspect(|_| tracing::debug!("Exported secrets written in file"))
+            .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+
         Ok(())
     }
 
