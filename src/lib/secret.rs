@@ -1,10 +1,10 @@
 use std::fmt;
 use std::ops::Deref;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use zeroize::Zeroizing;
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Deserialize, Serialize)]
 #[serde(transparent)]
 pub struct Secret(Zeroizing<String>);
 
@@ -76,5 +76,13 @@ mod tests {
         let secret: Secret = serde_json::from_str(json).unwrap();
 
         assert_eq!(&*secret, "my_deserialized_secret");
+    }
+
+    #[test]
+    fn test_serialize_from_secret() {
+        let secret = Secret::new("my_secret_value".to_string());
+        let json = serde_json::to_value(&secret).unwrap();
+
+        assert_eq!(&json, "my_secret_value");
     }
 }

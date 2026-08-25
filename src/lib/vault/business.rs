@@ -13,7 +13,7 @@ impl VaultExportBusiness {
 
     pub async fn export(&self, root_path: &str) -> Result<()> {
         let result = self.export_data(root_path).await?;
-        // let result = serde_json::to_value(&result)?;
+        let result = serde_json::to_value(&result)?;
 
         println!("{:?}", result);
         Ok(())
@@ -36,7 +36,7 @@ impl VaultExportBusiness {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match self.client.find_all(&full_path, false).await {
+                    match self.client.find_all(&full_path).await {
                         Ok(secret_data) => {
                             results.push(VaultExportData::new(full_path, secret_data));
                         }

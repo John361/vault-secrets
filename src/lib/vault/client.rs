@@ -15,10 +15,11 @@ use crate::vault::VaultConfig;
 pub struct VaultClient {
     client: vaultrs::client::VaultClient,
     mount: String,
+    encode: bool,
 }
 
 impl VaultClient {
-    pub async fn new(config: VaultConfig) -> Result<Self> {
+    pub async fn new(config: VaultConfig, encode: bool) -> Result<Self> {
         let client_builder = if let Some(token) = config.token.clone() {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
@@ -53,11 +54,12 @@ impl VaultClient {
         Ok(Self {
             client,
             mount: config.mount.clone(),
+            encode,
         })
     }
 
-    pub async fn find(&self, path: &str, key: &str, encode: bool) -> Result<Secret> {
-        let result = self.find_all(path, encode).await?;
+    pub async fn find(&self, path: &str, key: &str) -> Result<Secret> {
+        let result = self.find_all(path).await?;
         let value = result
             .get(key)
             .with_context(|| format!("Key {key} not found"))?
@@ -66,14 +68,14 @@ impl VaultClient {
         Ok(value)
     }
 
-    pub async fn find_all(&self, path: &str, encode: bool) -> Result<HashMap<String, Secret>> {
+    pub async fn find_all(&self, path: &str) -> Result<HashMap<String, Secret>> {
         let mut raw_results: HashMap<String, String> = kv2::read(&self.client, &self.mount, path)
             .await
             .with_context(|| format!("Error reading path {path}"))?;
         let mut results = HashMap::new();
 
         for result in raw_results.iter_mut() {
-            if encode {
+            if self.encode {
                 *result.1 = STANDARD.encode(result.1.as_bytes());
             }
 

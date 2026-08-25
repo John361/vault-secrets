@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
+use serde::Serialize;
+
 use crate::secret::Secret;
 
-#[derive(Debug)] // TODO: remove debug
+#[derive(Serialize)]
 pub struct VaultExportData {
     pub path: String,
     pub data: HashMap<String, Secret>,

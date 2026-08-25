@@ -9,7 +9,7 @@ use crate::vault::{VaultClient, VaultExportBusiness};
 pub async fn run() -> Result<()> {
     let cli = Cli::load();
     let config = AppConfig::load(&cli.config)?;
-    let vault_client = VaultClient::new(config.vault).await?;
+    let vault_client = VaultClient::new(config.vault, true).await?; // TODO: add global argument for encode or not and with default = true
 
     run_with_vault_client(cli, vault_client).await
 }
@@ -17,7 +17,7 @@ pub async fn run() -> Result<()> {
 async fn run_with_vault_client(cli: Cli, vault_client: VaultClient) -> Result<()> {
     match cli.command {
         Commands::Find(args) => {
-            let result = vault_client.find(&args.path, &args.key, true).await?; // TODO: add global argument for encode or not and with default = true
+            let result = vault_client.find(&args.path, &args.key).await?;
             println!("{}", result.deref());
         }
 
