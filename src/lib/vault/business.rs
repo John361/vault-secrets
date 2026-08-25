@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use anyhow::Result;
 
 use crate::vault::{VaultClient, VaultExportData};
@@ -15,9 +13,9 @@ impl VaultExportBusiness {
 
     pub async fn export(&self, root_path: &str) -> Result<()> {
         let result = self.export_data(root_path).await?;
-        let result = serde_json::to_value(&result)?;
+        // let result = serde_json::to_value(&result)?;
 
-        println!("{}", result);
+        println!("{:?}", result);
         Ok(())
     }
 
@@ -38,7 +36,7 @@ impl VaultExportBusiness {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match self.read_data(&full_path).await {
+                    match self.client.find_all(&full_path, false).await {
                         Ok(secret_data) => {
                             results.push(VaultExportData::new(full_path, secret_data));
                         }
@@ -52,10 +50,5 @@ impl VaultExportBusiness {
         }
 
         Ok(results)
-    }
-
-    async fn read_data(&self, path: &str) -> Result<HashMap<String, String>> {
-        let result = self.client.find_all(path, false).await?;
-        Ok(result)
     }
 }

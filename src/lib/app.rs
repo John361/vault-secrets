@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use anyhow::Result;
 
 use crate::cli::{Cli, Commands};
@@ -16,7 +18,7 @@ async fn run_with_vault_client(cli: Cli, vault_client: VaultClient) -> Result<()
     match cli.command {
         Commands::Find(args) => {
             let result = vault_client.find(&args.path, &args.key, true).await?; // TODO: add global argument for encode or not and with default = true
-            println!("{result:}");
+            println!("{}", result.deref());
         }
 
         Commands::Export(args) => {

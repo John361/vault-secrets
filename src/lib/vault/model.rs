@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-use serde::Serialize;
+use crate::secret::Secret;
 
-#[derive(Serialize)]
+#[derive(Debug)] // TODO: remove debug
 pub struct VaultExportData {
     pub path: String,
-    pub data: HashMap<String, String>, // TODO: think about secrets protection on JSON export
+    pub data: HashMap<String, Secret>,
 }
 
 impl VaultExportData {
-    pub fn new(path: String, data: HashMap<String, String>) -> Self {
+    pub fn new(path: String, data: HashMap<String, Secret>) -> Self {
         Self { path, data }
     }
 }

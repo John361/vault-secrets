@@ -9,6 +9,7 @@ use vaultrs::kv2;
 use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
+use crate::secret::Secret;
 use crate::vault::VaultConfig;
 
 pub struct VaultClient {
@@ -55,7 +56,7 @@ impl VaultClient {
         })
     }
 
-    pub async fn find(&self, path: &str, key: &str, encode: bool) -> Result<String> {
+    pub async fn find(&self, path: &str, key: &str, encode: bool) -> Result<Secret> {
         let result = self.find_all(path, encode).await?;
         let value = result
             .get(key)
@@ -65,18 +66,22 @@ impl VaultClient {
         Ok(value)
     }
 
-    pub async fn find_all(&self, path: &str, encode: bool) -> Result<HashMap<String, String>> {
-        let mut result: HashMap<String, String> = kv2::read(&self.client, &self.mount, path)
+    pub async fn find_all(&self, path: &str, encode: bool) -> Result<HashMap<String, Secret>> {
+        let mut raw_results: HashMap<String, String> = kv2::read(&self.client, &self.mount, path)
             .await
             .with_context(|| format!("Error reading path {path}"))?;
+        let mut results = HashMap::new();
 
-        if encode {
-            for value in result.values_mut() {
-                *value = STANDARD.encode(value.as_bytes());
+        for result in raw_results.iter_mut() {
+            if encode {
+                *result.1 = STANDARD.encode(result.1.as_bytes());
             }
+
+            let secret = Secret::new(result.1.to_string());
+            results.insert(result.0.to_string(), secret);
         }
 
-        Ok(result)
+        Ok(results)
     }
 
     pub async fn list_paths(&self, path: &str) -> Result<Vec<String>> {
