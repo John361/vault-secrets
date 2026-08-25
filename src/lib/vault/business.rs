@@ -2,15 +2,18 @@ use std::ops::Deref;
 
 use anyhow::Result;
 
-use crate::vault::{VaultClient, VaultExportData};
+use crate::vault::VaultConfig;
+use crate::vault::client::VaultClient;
+use crate::vault::model::VaultExportData;
 
 pub struct VaultFindBusiness {
     client: VaultClient,
 }
 
 impl VaultFindBusiness {
-    pub fn new(client: VaultClient) -> Self {
-        Self { client }
+    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(config, encoded).await?;
+        Ok(Self { client })
     }
 
     pub async fn find(&self, path: &str, key: &str) -> Result<()> {
@@ -26,8 +29,9 @@ pub struct VaultExportBusiness {
 }
 
 impl VaultExportBusiness {
-    pub fn new(client: VaultClient) -> Self {
-        Self { client }
+    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(config, encoded).await?;
+        Ok(Self { client })
     }
 
     pub async fn export(&self, root_path: &str) -> Result<()> {
