@@ -27,7 +27,10 @@ async fn run_with_vault_client(
             println!("{result:}");
         }
 
-        Commands::Export(args) => {}
+        Commands::Export(args) => {
+            let result = vault_client.list_paths(&args.path).await?; // If ends with a '/', it's a path
+            println!("{result:#?}");
+        }
     }
 
     Ok(())
