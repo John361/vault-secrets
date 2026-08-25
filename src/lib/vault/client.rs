@@ -32,8 +32,9 @@ impl RealVaultProvider {
         .context("Failed to create Vault client")?;
 
         let login = UserpassLogin {
-            username: config.username.clone(),
-            password: config.password.deref().to_string(),
+            // TODO: avoid unwrap
+            username: config.username.clone().unwrap().clone(),
+            password: config.password.clone().unwrap().deref().to_string(),
         };
 
         client

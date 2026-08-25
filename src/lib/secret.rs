@@ -4,7 +4,7 @@ use std::ops::Deref;
 use serde::Deserialize;
 use zeroize::Zeroizing;
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(transparent)]
 pub struct Secret(Zeroizing<String>);
 
