@@ -16,11 +16,9 @@ impl VaultFindBusiness {
         Ok(Self { client })
     }
 
-    pub async fn find(&self, path: &str, key: &str) -> Result<()> {
+    pub async fn find(&self, path: &str, key: &str) -> Result<String> {
         let result = self.client.find(path, key).await?;
-        println!("{}", result.deref());
-
-        Ok(())
+        Ok(result.deref().to_string())
     }
 }
 

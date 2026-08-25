@@ -11,7 +11,8 @@ pub async fn run() -> Result<()> {
     match cli.command {
         Commands::Find(args) => {
             let business = VaultFindBusiness::new(config.vault, !cli.clear_output).await?;
-            business.find(&args.path, &args.key).await?;
+            let result = business.find(&args.path, &args.key).await?;
+            println!("{result}");
         }
 
         Commands::Export(args) => {
