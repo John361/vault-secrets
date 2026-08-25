@@ -9,12 +9,15 @@ A secure, lightweight Rust CLI application designed to fetch secrets from Hashic
 
 This tool is specifically built for server automation scripts, allowing server administrators to securely retrieve runtime secrets without hardcoding credentials on the host system.
 
+Vault Secrets can also be used to export secrets from a Hashicorp Vault instances. This is useful for extracted backups.
+
 ## Overview
 Vault Secrets is designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
 
 Key Features:
 - **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
 - **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
+- **Data export:** Export your data from your instance to a dedicated file
 - **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
@@ -116,7 +119,7 @@ terragrunt plan && terragrunt apply --auto-approve
 ```shell
 cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
 
-RUST_LOG=debug cargo run -- --config app.conf.yml find --path "vault/users/vault-secrets" --key "username"
+RUST_LOG=debug cargo run -- --config app.conf.yml --help
 ```
 
 #### Run linters
@@ -163,7 +166,7 @@ cargo deb
 The `.deb` package will be generated in `target/debian/` folder.
 
 ## Usage
-### Command syntax
+### Find secrets
 ```shell
 # Base64 output
 vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
@@ -172,18 +175,42 @@ vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY
 vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --key <SECRET_KEY>
 ```
 
+### Export secrets
+```shell
+# JSON base64 export
+vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-file <OUTPUT_FILE>
+
+# YAML clear export
+vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-file <OUTPUT_FILE> --output-format yaml
+```
+
 ### Example
 ```shell
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
 # Output: base64-encoded secret
+
+vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-file "./test.yml" --output-format yaml
+# Output: in file
 ```
 
 ### Using in Shell Scripts
+#### Example for cron jobs
 ```shell
 #!/bin/bash
 
 API_KEY=$(vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/services/api" --key "key" | base64 -d)
 curl -H "Authorization: Bearer ${API_KEY}" https://api.example.com/data
+```
+
+#### Example for export cron jobs
+```shell
+#!/bin/bash
+
+today="$(date +%Y-%m-%d)"
+backup_path="/path/to/backups"
+backup_file="${backup_path}/${today}.json"
+
+vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-file "${backup_file}"
 ```
 
 ## Helpers
