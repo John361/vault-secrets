@@ -44,6 +44,9 @@ pub enum Commands {
 
     #[command(about = "Export secrets")]
     Export(ExportArgs),
+
+    #[command(about = "Import secrets")]
+    Import(ImportArgs),
 }
 
 #[derive(Args, Debug)]
@@ -72,6 +75,24 @@ pub struct ExportArgs {
         value_enum
     )]
     pub output_format: FormatArgs,
+}
+
+#[derive(Args, Debug)]
+#[command(about = "Import arguments", long_about = None)]
+pub struct ImportArgs {
+    #[arg(long, help = "Path to secret (required)", required = true)]
+    pub path: String,
+
+    #[arg(long, help = "Input folder path (required)", required = true)]
+    pub input_folder: PathBuf,
+
+    #[arg(
+        long,
+        help = "Input format (optional, default: json)",
+        default_value_t = FormatArgs::Json,
+        value_enum
+    )]
+    pub input_format: FormatArgs,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, ValueEnum)]
@@ -132,6 +153,29 @@ mod tests {
     }
 
     #[test]
+    fn test_cli_load_import_success() {
+        let args = vec![
+            "vault-secrets",
+            "--config",
+            "/tmp/config.yaml",
+            "import",
+            "--path",
+            "secret",
+            "--input-folder",
+            "./tests",
+        ];
+
+        let cli = Cli::try_load_from(args).unwrap();
+        assert_eq!(cli.config, "/tmp/config.yaml");
+
+        if let Commands::Import(args) = &cli.command {
+            assert_eq!(args.path, "secret");
+            assert_eq!(args.input_folder, PathBuf::from("./tests"));
+            assert_eq!(args.input_format, FormatArgs::Json);
+        }
+    }
+
+    #[test]
     fn test_cli_missing_config() {
         let args = vec![
             "vault-secrets",
@@ -157,6 +201,14 @@ mod tests {
     #[test]
     fn test_cli_missing_export_subcommand_args() {
         let args = vec!["vault-secrets", "--config", "/tmp/config.yaml", "export"];
+        let err = Cli::try_load_from(args).unwrap_err();
+
+        assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
+    }
+
+    #[test]
+    fn test_cli_missing_import_subcommand_args() {
+        let args = vec!["vault-secrets", "--config", "/tmp/config.yaml", "import"];
         let err = Cli::try_load_from(args).unwrap_err();
 
         assert_eq!(err.kind(), ErrorKind::MissingRequiredArgument);
@@ -222,6 +274,33 @@ mod tests {
             assert_eq!(args.path, "secret");
             assert_eq!(args.output_folder, PathBuf::from("./tests"));
             assert_eq!(args.output_format, FormatArgs::Yaml);
+        }
+    }
+
+    #[test]
+    fn test_cli_load_import_uses_parse() {
+        let args = vec![
+            "vault-secrets",
+            "--clear-output",
+            "--config",
+            "/tmp/config.yaml",
+            "import",
+            "--path",
+            "secret",
+            "--input-folder",
+            "./tests",
+            "--input-format",
+            "yaml",
+        ];
+
+        let cli = Cli::try_load_from(args).unwrap();
+        assert_eq!(cli.config, "/tmp/config.yaml");
+        assert!(cli.clear_output);
+
+        if let Commands::Import(args) = cli.command {
+            assert_eq!(args.path, "secret");
+            assert_eq!(args.input_folder, PathBuf::from("./tests"));
+            assert_eq!(args.input_format, FormatArgs::Yaml);
         }
     }
 }

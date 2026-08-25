@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::cli::{Cli, Commands};
 use crate::config::AppConfig;
-use crate::vault::{VaultExportBusiness, VaultFindBusiness};
+use crate::vault::{VaultExportBusiness, VaultFindBusiness, VaultImportBusiness};
 
 pub async fn run() -> Result<()> {
     let cli = Cli::load();
@@ -18,6 +18,7 @@ pub async fn run() -> Result<()> {
                 tracing::error!(
                     "At least one mount path must be provided in the configuration file"
                 );
+                std::process::exit(1);
             }
         }
 
@@ -27,6 +28,16 @@ pub async fn run() -> Result<()> {
             for mount in config.vault.mount {
                 business
                     .export(&mount, &args.path, &args.output_folder, &args.output_format)
+                    .await?;
+            }
+        }
+
+        Commands::Import(args) => {
+            let business = VaultImportBusiness::new(&config.vault, !cli.clear_output).await?;
+
+            for mount in config.vault.mount {
+                business
+                    .import(&mount, &args.input_folder, &args.input_format)
                     .await?;
             }
         }

@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use std::path::PathBuf;
 
 use anyhow::{Context, Result};
@@ -6,27 +5,7 @@ use anyhow::{Context, Result};
 use crate::cli::FormatArgs;
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
-use crate::vault::model::VaultExportData;
-
-pub struct VaultFindBusiness {
-    client: VaultClient,
-}
-
-impl VaultFindBusiness {
-    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(config, encoded).await?;
-        Ok(Self { client })
-    }
-
-    pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<String> {
-        let result = self
-            .client
-            .find(mount, path, key)
-            .await
-            .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
-        Ok(result.deref().to_string())
-    }
-}
+use crate::vault::model::VaultData;
 
 pub struct VaultExportBusiness {
     client: VaultClient,
@@ -77,7 +56,7 @@ impl VaultExportBusiness {
         Ok(())
     }
 
-    async fn export_data(&self, mount: &str, root_path: &str) -> Result<Vec<VaultExportData>> {
+    async fn export_data(&self, mount: &str, root_path: &str) -> Result<Vec<VaultData>> {
         let mut results = Vec::new();
         let mut stack = vec![root_path.to_string()];
 
@@ -101,8 +80,7 @@ impl VaultExportBusiness {
                     match self.client.find_all(mount, &full_path).await {
                         Ok(secret_data) => {
                             let cleaned_path = &full_path[1..];
-                            results
-                                .push(VaultExportData::new(cleaned_path.to_string(), secret_data));
+                            results.push(VaultData::new(cleaned_path.to_string(), secret_data));
                         }
 
                         Err(e) => {
