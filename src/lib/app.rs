@@ -10,22 +10,17 @@ pub async fn run() -> Result<()> {
 
     match cli.command {
         Commands::Find(args) => {
-            if let Some(mount) = config.vault.mount.first() {
-                let business = VaultFindBusiness::new(&config.vault, !cli.clear_output).await?;
-                let result = business.find(mount, &args.path, &args.key).await?;
-                println!("{result}");
-            } else {
-                tracing::error!(
-                    "At least one mount path must be provided in the configuration file"
-                );
-                std::process::exit(1);
-            }
+            let business = VaultFindBusiness::new(&config.vault, !cli.clear_output).await?;
+            let result = business
+                .find(&config.find.mount, &args.path, &args.key)
+                .await?;
+            println!("{result}");
         }
 
         Commands::Export(args) => {
             let business = VaultExportBusiness::new(&config.vault, !cli.clear_output).await?;
 
-            for mount in config.vault.mount {
+            for mount in config.export.mounts {
                 business
                     .export(&mount, &args.path, &args.output_folder, &args.output_format)
                     .await?;
@@ -35,7 +30,7 @@ pub async fn run() -> Result<()> {
         Commands::Import(args) => {
             let business = VaultImportBusiness::new(&config.vault, !cli.clear_output).await?;
 
-            for mount in config.vault.mount {
+            for mount in config.import.mounts {
                 business
                     .import(&mount, &args.input_folder, &args.input_format)
                     .await?;

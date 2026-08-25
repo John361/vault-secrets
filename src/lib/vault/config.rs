@@ -8,7 +8,23 @@ pub struct VaultConfig {
     pub username: Option<String>,
     pub password: Option<Secret>,
     pub token: Option<Secret>,
-    pub mount: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct VaultFindConfig {
+    pub mount: String,
+}
+
+#[derive(Deserialize)]
+pub struct VaultExportConfig {
+    pub sleep: u16,
+    pub mounts: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct VaultImportConfig {
+    pub sleep: u16,
+    pub mounts: Vec<String>,
 }
 
 #[cfg(test)]
@@ -23,8 +39,7 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "my_secret_password",
-            "token": "my_secret_token",
-            "mount": ["secret", "secret-2"]
+            "token": "my_secret_token"
         }
         "#;
 
@@ -34,37 +49,79 @@ mod tests {
         assert_eq!(config.username, Some("admin".to_string()));
         assert_eq!(config.password.unwrap().deref(), "my_secret_password");
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
-        assert_eq!(config.mount, vec!["secret", "secret-2"]);
     }
 
     #[test]
-    fn test_deserialize_vault_config_empty_password() {
+    fn test_deserialize_vault_find_config_json() {
+        let json = r#"
+        {
+            "mount": "my-path"
+        }
+        "#;
+
+        let config: VaultFindConfig = serde_json::from_str(json).unwrap();
+
+        assert_eq!(config.mount, "my-path");
+    }
+
+    #[test]
+    fn test_deserialize_vault_export_config_json() {
+        let json = r#"
+        {
+            "sleep": 3,
+            "mounts": ["my-path-1", "my-path-2"]
+        }
+        "#;
+
+        let config: VaultExportConfig = serde_json::from_str(json).unwrap();
+
+        assert_eq!(config.sleep, 3);
+        assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
+    }
+
+    #[test]
+    fn test_deserialize_vault_import_config_json() {
+        let json = r#"
+        {
+            "sleep": 3,
+            "mounts": ["my-path-1", "my-path-2"]
+        }
+        "#;
+
+        let config: VaultImportConfig = serde_json::from_str(json).unwrap();
+
+        assert_eq!(config.sleep, 3);
+        assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
+    }
+
+    #[test]
+    fn test_deserialize_vault_config_username_password() {
         let json = r#"
         {
             "address": "http://localhost:8200",
             "username": "admin",
-            "password": "",
+            "password": "changeme",
             "mount": ["secret"]
         }
         "#;
 
         let config: VaultConfig = serde_json::from_str(json).unwrap();
-        assert_eq!(config.password.unwrap().deref(), "");
+        assert_eq!(config.password.unwrap().deref(), "changeme");
     }
 
     #[test]
-    fn test_deserialize_vault_config_empty_token() {
+    fn test_deserialize_vault_config_token() {
         let json = r#"
         {
             "address": "http://localhost:8200",
-            "token": "",
+            "token": "changeme",
             "mount": ["secret"]
         }
         "#;
 
         let config: VaultConfig = serde_json::from_str(json).unwrap();
 
-        assert_eq!(config.token.unwrap().deref(), "");
+        assert_eq!(config.token.unwrap().deref(), "changeme");
     }
 
     #[test]
@@ -74,7 +131,6 @@ mod tests {
             username: Some("admin".to_string()),
             password: Some(Secret::new("top_secret".to_string())),
             token: None,
-            mount: vec!["secret".to_string()],
         };
 
         assert_eq!(config.password.unwrap().deref(), "top_secret");
@@ -87,7 +143,6 @@ mod tests {
             username: Some("admin".to_string()),
             password: None,
             token: Some(Secret::new("top_secret".to_string())),
-            mount: vec!["secret".to_string()],
         };
 
         assert_eq!(config.token.unwrap().deref(), "top_secret");
@@ -97,12 +152,47 @@ mod tests {
     fn test_deserialize_vault_config_missing_field() {
         let json = r#"
         {
-            "address": "http://localhost:8200",
             "username": "admin"
         }
         "#;
 
         let result = serde_json::from_str::<VaultConfig>(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_vault_find_config_missing_field() {
+        let json = r#"
+        {
+
+        }
+        "#;
+
+        let result = serde_json::from_str::<VaultFindConfig>(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_vault_export_config_missing_field() {
+        let json = r#"
+        {
+            "sleep": 3
+        }
+        "#;
+
+        let result = serde_json::from_str::<VaultExportConfig>(json);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_deserialize_vault_import_config_missing_field() {
+        let json = r#"
+        {
+            "sleep": 3
+        }
+        "#;
+
+        let result = serde_json::from_str::<VaultImportConfig>(json);
         assert!(result.is_err());
     }
 }
