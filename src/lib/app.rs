@@ -11,14 +11,14 @@ pub async fn run() -> Result<()> {
     match cli.command {
         Commands::Find(args) => {
             let business = VaultFindBusiness::new(config.vault, !cli.clear_output).await?;
-            let result = business.find(&args.path, &args.key).await?;
+            let result = business.find("", &args.path, &args.key).await?; // TODO: mount
             println!("{result}");
         }
 
         Commands::Export(args) => {
             let business = VaultExportBusiness::new(config.vault, !cli.clear_output).await?;
             business
-                .export(&args.path, args.output_file, args.output_format)
+                .export("", &args.path, args.output_file, args.output_format) // TODO: mount
                 .await?;
         }
     }
