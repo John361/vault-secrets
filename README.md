@@ -1,4 +1,4 @@
-<img src="./ops/assets/icon.jpeg" alt="" />
+<img src="ops/assets/icon.jpeg" alt="" />
 
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=alert_status)](https://sonarcloud.io/dashboard?id=John361_vault-secrets)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=John361_vault-secrets&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=John361_vault-secrets)
