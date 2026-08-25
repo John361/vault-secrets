@@ -8,7 +8,7 @@ pub struct VaultConfig {
     pub username: Option<String>,
     pub password: Option<Secret>,
     pub token: Option<Secret>,
-    pub mount: String,
+    pub mount: Vec<String>,
 }
 
 #[cfg(test)]
@@ -24,7 +24,7 @@ mod tests {
             "username": "admin",
             "password": "my_secret_password",
             "token": "my_secret_token",
-            "mount": "secret"
+            "mount": ["secret", "secret-2"]
         }
         "#;
 
@@ -34,7 +34,7 @@ mod tests {
         assert_eq!(config.username, Some("admin".to_string()));
         assert_eq!(config.password.unwrap().deref(), "my_secret_password");
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
-        assert_eq!(config.mount, "secret");
+        assert_eq!(config.mount, vec!["secret", "secret-2"]);
     }
 
     #[test]
@@ -44,12 +44,11 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "",
-            "mount": "secret"
+            "mount": ["secret"]
         }
         "#;
 
         let config: VaultConfig = serde_json::from_str(json).unwrap();
-
         assert_eq!(config.password.unwrap().deref(), "");
     }
 
@@ -59,7 +58,7 @@ mod tests {
         {
             "address": "http://localhost:8200",
             "token": "",
-            "mount": "secret"
+            "mount": ["secret"]
         }
         "#;
 
@@ -75,7 +74,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: Some(Secret::new("top_secret".to_string())),
             token: None,
-            mount: "secret".to_string(),
+            mount: vec!["secret".to_string()],
         };
 
         assert_eq!(config.password.unwrap().deref(), "top_secret");
@@ -88,7 +87,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: None,
             token: Some(Secret::new("top_secret".to_string())),
-            mount: "secret".to_string(),
+            mount: vec!["secret".to_string()],
         };
 
         assert_eq!(config.token.unwrap().deref(), "top_secret");

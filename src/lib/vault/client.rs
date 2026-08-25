@@ -50,10 +50,7 @@ impl VaultClient {
         }
 
         tracing::debug!("Vault connection initialized");
-        Ok(Self {
-            client,
-            encode,
-        })
+        Ok(Self { client, encode })
     }
 
     pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<Secret> {
@@ -67,9 +64,10 @@ impl VaultClient {
     }
 
     pub async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let mut raw_results: HashMap<String, String> = kv2::read(&self.client, mount, path)
-            .await
-            .with_context(|| format!("Error reading path {path}"))?;
+        let mut raw_results: HashMap<String, String> =
+            kv2::read(&self.client, mount, path)
+                .await
+                .with_context(|| format!("Error reading path {path}"))?;
         let mut results = HashMap::new();
 
         for result in raw_results.iter_mut() {

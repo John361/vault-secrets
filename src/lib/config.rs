@@ -45,7 +45,9 @@ mod tests {
           address: "http://localhost:8200"
           username: "user"
           password: "pass"
-          mount: "secret"
+          mount:
+            - "secret"
+            - "secret-2"
     "#;
 
         let temp_file = NamedTempFile::new().unwrap();
@@ -60,7 +62,7 @@ mod tests {
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.username.unwrap(), "user");
         assert_eq!(config.vault.password.unwrap().deref(), "pass");
-        assert_eq!(config.vault.mount, "secret");
+        assert_eq!(config.vault.mount, vec!["secret", "secret-2"]);
     }
 
     #[test]
@@ -69,7 +71,8 @@ mod tests {
         vault:
           address: "http://localhost:8200"
           token: "token"
-          mount: "secret"
+          mount:
+            - "secret"
     "#;
 
         let temp_file = NamedTempFile::new().unwrap();
@@ -83,7 +86,7 @@ mod tests {
         let config = result.unwrap();
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.token.unwrap().deref(), "token");
-        assert_eq!(config.vault.mount, "secret");
+        assert_eq!(config.vault.mount, vec!["secret"]);
     }
 
     #[test]
@@ -100,7 +103,8 @@ mod tests {
         vault:
           username: "user"
           password: "pass"
-          mount: "secret"
+          mount:
+            - "secret"
     "#;
         let temp_file = write_temp_config(config_content);
         let path = temp_file.path().to_str().unwrap();
