@@ -3,13 +3,25 @@
 # - By default, username / password is used unless you specify only token
 #
 # Mount information:
-# - On find command, only the first one will be used
-# - On export command, all values will be used
 # - On import command, if the mount paths do not exist, make sure you have enough permissions to create them
+#
+# Request interval information:
+# - Time between each request (for example when importing or exporting massive mounts paths)
+# - Used to avoid rate limiting issues
 vault:
   address: "http://127.0.0.1:8200"
   username: "vault-secrets"
   password: "changeme"
   token: "changeme"
-  mount:
+  request_interval_ms: 200
+
+find:
+  mount: "vault-secrets-dev"
+
+export:
+  mounts:
     - "vault-secrets-dev"
+
+import:
+  mounts:
+    - "vault-secrets-tests"

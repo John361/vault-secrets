@@ -1,11 +1,14 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::vault::VaultConfig;
+use crate::vault::{VaultConfig, VaultExportConfig, VaultFindConfig, VaultImportConfig};
 
 #[derive(Deserialize)]
 pub struct AppConfig {
     pub vault: VaultConfig,
+    pub find: VaultFindConfig,
+    pub export: VaultExportConfig,
+    pub import: VaultImportConfig,
 }
 
 impl AppConfig {
@@ -45,7 +48,15 @@ mod tests {
           address: "http://localhost:8200"
           username: "user"
           password: "pass"
-          mount:
+          request_interval_ms: 200
+        find:
+          mount: "secret"
+        export:
+          mounts:
+            - "secret"
+            - "secret-2"
+        import:
+          mounts:
             - "secret"
             - "secret-2"
     "#;
@@ -62,7 +73,7 @@ mod tests {
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.username.unwrap(), "user");
         assert_eq!(config.vault.password.unwrap().deref(), "pass");
-        assert_eq!(config.vault.mount, vec!["secret", "secret-2"]);
+        assert_eq!(config.vault.request_interval_ms, 200);
     }
 
     #[test]
@@ -71,8 +82,17 @@ mod tests {
         vault:
           address: "http://localhost:8200"
           token: "token"
-          mount:
+          request_interval_ms: 200
+        find:
+          mount: "secret"
+        export:
+          mounts:
             - "secret"
+            - "secret-2"
+        import:
+          mounts:
+            - "secret"
+            - "secret-2"
     "#;
 
         let temp_file = NamedTempFile::new().unwrap();
@@ -86,7 +106,7 @@ mod tests {
         let config = result.unwrap();
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.token.unwrap().deref(), "token");
-        assert_eq!(config.vault.mount, vec!["secret"]);
+        assert_eq!(config.vault.request_interval_ms, 200);
     }
 
     #[test]
@@ -103,8 +123,6 @@ mod tests {
         vault:
           username: "user"
           password: "pass"
-          mount:
-            - "secret"
     "#;
         let temp_file = write_temp_config(config_content);
         let path = temp_file.path().to_str().unwrap();
