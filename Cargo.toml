@@ -19,7 +19,6 @@ path = "src/lib/lib.rs"
 
 [dependencies]
 anyhow             = "1.0.104"
-async-trait        = "0.1.92"
 base64             = "0.23.1"
 clap               = { version = "4.6.6", features = ["derive", "env"] }
 config             = { version = "0.15.25", features = ["yaml"] }
@@ -33,7 +32,6 @@ vaultrs-login      = "0.2.4"
 zeroize            = { version = "1.9.0", features = ["serde"] }
 
 [dev-dependencies]
-mockall  = "0.15.0"
 tempfile = "3.27.0"
 
 [profile.release]
