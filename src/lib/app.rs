@@ -2,7 +2,7 @@ use anyhow::Result;
 
 use crate::cli::{Cli, Commands};
 use crate::config::AppConfig;
-use crate::vault::{RealVaultProvider, VaultClient, VaultProvider};
+use crate::vault::{RealVaultProvider, VaultBusiness, VaultClient, VaultProvider};
 
 pub async fn run() -> Result<()> {
     let cli = Cli::load();
@@ -28,7 +28,8 @@ async fn run_with_vault_client(
         }
 
         Commands::Export(args) => {
-            let result = vault_client.list_paths(&args.path).await?; // If ends with a '/', it's a path
+            let business = VaultBusiness::new(vault_client);
+            let result = business.export_vault_secrets(&args.path).await?;
             println!("{result:#?}");
         }
     }
