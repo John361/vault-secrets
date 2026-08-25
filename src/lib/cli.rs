@@ -62,8 +62,8 @@ pub struct ExportArgs {
     #[arg(long, help = "Path to secret (required)", required = true)]
     pub path: String,
 
-    #[arg(long, help = "Output file path (required)", required = true)]
-    pub output_file: PathBuf,
+    #[arg(long, help = "Output folder path (required)", required = true)]
+    pub output_folder: PathBuf,
 
     #[arg(
         long,
@@ -117,8 +117,8 @@ mod tests {
             "export",
             "--path",
             "secret",
-            "--output-file",
-            "./secret.json",
+            "--output-folder",
+            "./tests",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -126,7 +126,7 @@ mod tests {
 
         if let Commands::Export(args) = &cli.command {
             assert_eq!(args.path, "secret");
-            assert_eq!(args.output_file, PathBuf::from("./secret.json"));
+            assert_eq!(args.output_folder, PathBuf::from("./tests"));
             assert_eq!(args.output_format, FormatArgs::Json);
         }
     }
@@ -208,8 +208,8 @@ mod tests {
             "export",
             "--path",
             "secret",
-            "--output-file",
-            "./secrets.json",
+            "--output-folder",
+            "./tests",
             "--output-format",
             "yaml",
         ];
@@ -220,7 +220,7 @@ mod tests {
 
         if let Commands::Export(args) = cli.command {
             assert_eq!(args.path, "secret");
-            assert_eq!(args.output_file, PathBuf::from("./secrets.json"));
+            assert_eq!(args.output_folder, PathBuf::from("./tests"));
             assert_eq!(args.output_format, FormatArgs::Yaml);
         }
     }

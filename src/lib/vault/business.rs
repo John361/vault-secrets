@@ -42,26 +42,34 @@ impl VaultExportBusiness {
         &self,
         mount: &str,
         root_path: &str,
-        output_file: &PathBuf,
+        output_folder: &PathBuf,
         output_format: &FormatArgs,
     ) -> Result<()> {
+        self.check_folder(output_folder)?;
+
         let result = self
             .export_data(mount, root_path)
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
 
-        let file = std::fs::File::create(output_file)
-            .with_context(|| format!("Failed to create file: {:?}", output_file))?;
+        let extension = match output_format {
+            FormatArgs::Json => "json",
+            FormatArgs::Yaml => "yaml",
+        };
+
+        let file_path = output_folder.join(format!("{mount}.{extension}"));
+        let file = std::fs::File::create(&file_path)
+            .with_context(|| format!("Failed to create file: {file_path:?}"))?;
 
         match output_format {
             FormatArgs::Json => {
                 serde_json::to_writer_pretty(file, &result)
-                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
             }
 
             FormatArgs::Yaml => {
                 yaml_serde::to_writer(&file, &result)
-                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
             }
         }
 
@@ -106,5 +114,18 @@ impl VaultExportBusiness {
         }
 
         Ok(results)
+    }
+
+    fn check_folder(&self, folder: &PathBuf) -> Result<()> {
+        if folder.exists() && !folder.is_dir() {
+            anyhow::bail!("Output folder already exist and is not a directory");
+        }
+
+        if !folder.exists() {
+            std::fs::create_dir_all(folder)
+                .with_context(|| format!("Could not create output folder {}", folder.display()))?;
+        }
+
+        Ok(())
     }
 }

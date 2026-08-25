@@ -26,7 +26,7 @@ pub async fn run() -> Result<()> {
 
             for mount in config.vault.mount {
                 business
-                    .export(&mount, &args.path, &args.output_file, &args.output_format)
+                    .export(&mount, &args.path, &args.output_folder, &args.output_format)
                     .await?;
             }
         }
