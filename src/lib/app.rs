@@ -1,10 +1,8 @@
-use std::ops::Deref;
-
 use anyhow::Result;
 
 use crate::cli::{Cli, Commands};
 use crate::config::AppConfig;
-use crate::vault::{VaultClient, VaultExportBusiness};
+use crate::vault::{VaultClient, VaultExportBusiness, VaultFindBusiness};
 
 pub async fn run() -> Result<()> {
     let cli = Cli::load();
@@ -17,8 +15,8 @@ pub async fn run() -> Result<()> {
 async fn run_with_vault_client(cli: Cli, vault_client: VaultClient) -> Result<()> {
     match cli.command {
         Commands::Find(args) => {
-            let result = vault_client.find(&args.path, &args.key).await?;
-            println!("{}", result.deref());
+            let business = VaultFindBusiness::new(vault_client);
+            business.find(&args.path, &args.key).await?;
         }
 
         Commands::Export(args) => {
