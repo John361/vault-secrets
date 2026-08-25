@@ -17,7 +17,8 @@ impl VaultFindBusiness {
     }
 
     pub async fn find(&self, path: &str, key: &str) -> Result<String> {
-        let result = self.client.find(path, key).await?;
+        let result = self.client.find(path, key).await
+            .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
         Ok(result.deref().to_string())
     }
 }
@@ -32,8 +33,9 @@ impl VaultExportBusiness {
         Ok(Self { client })
     }
 
-    pub async fn export(&self, root_path: &str) -> Result<()> {
-        let result = self.export_data(root_path).await?;
+    pub async fn export(&self, root_path: &str) -> Result<()> { // TODO: get the correct output format, output to file
+        let result = self.export_data(root_path).await
+            .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
         let result = serde_json::to_value(&result)?;
 
         println!("{:?}", result);
@@ -45,7 +47,8 @@ impl VaultExportBusiness {
         let mut stack = vec![root_path.to_string()];
 
         while let Some(current_path) = stack.pop() {
-            let items = self.client.list_paths(&current_path).await?;
+            let items = self.client.list_paths(&current_path).await
+                .inspect(|_| tracing::debug!("Listing path from {current_path}"))?;
 
             for item in items {
                 let full_path = if current_path.ends_with("/") {
@@ -63,7 +66,7 @@ impl VaultExportBusiness {
                         }
 
                         Err(e) => {
-                            eprintln!("Failed to read secret at {full_path}: {e}");
+                            tracing::error!("Failed to read secret at {full_path}: {e}");
                         }
                     }
                 }
