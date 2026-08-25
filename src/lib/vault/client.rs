@@ -101,15 +101,7 @@ impl VaultClient {
     }
 
     pub async fn set_all(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
-        let mount_exists = mount::list(&self.client)
-            .await
-            .with_context(|| "Error listing mounts")?
-            .contains_key(&format!("{mount}/"));
-
-        if !mount_exists {
-            mount::enable(&self.client, mount, "kv-v2", None).await?;
-            tracing::debug!("Mount {mount} enabled");
-        }
+        self.create_mount_if_not_exists(mount).await?;
 
         for item in data_list.iter_mut() {
             if self.encode {
@@ -128,6 +120,20 @@ impl VaultClient {
 
             kv2::set(&self.client, mount, &item.path, &item.data).await?;
             self.sleep().await;
+        }
+
+        Ok(())
+    }
+
+    async fn create_mount_if_not_exists(&self, mount: &str) -> Result<()> {
+        let mount_exists = mount::list(&self.client)
+            .await
+            .with_context(|| "Error listing mounts")?
+            .contains_key(&format!("{mount}/"));
+
+        if !mount_exists {
+            mount::enable(&self.client, mount, "kv-v2", None).await?;
+            tracing::debug!("Mount {mount} enabled");
         }
 
         Ok(())
