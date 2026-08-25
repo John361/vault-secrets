@@ -13,15 +13,15 @@ pub struct VaultFindBusiness {
 }
 
 impl VaultFindBusiness {
-    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
         let client = VaultClient::new(config, encoded).await?;
         Ok(Self { client })
     }
 
-    pub async fn find(&self, path: &str, key: &str) -> Result<String> {
+    pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<String> {
         let result = self
             .client
-            .find(path, key)
+            .find(mount, path, key)
             .await
             .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
         Ok(result.deref().to_string())
@@ -33,34 +33,43 @@ pub struct VaultExportBusiness {
 }
 
 impl VaultExportBusiness {
-    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
         let client = VaultClient::new(config, encoded).await?;
         Ok(Self { client })
     }
 
     pub async fn export(
         &self,
+        mount: &str,
         root_path: &str,
-        output_file: PathBuf,
-        output_format: FormatArgs,
+        output_folder: &PathBuf,
+        output_format: &FormatArgs,
     ) -> Result<()> {
+        self.check_folder(output_folder)?;
+
         let result = self
-            .export_data(root_path)
+            .export_data(mount, root_path)
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
 
-        let file = std::fs::File::create(&output_file)
-            .with_context(|| format!("Failed to create file: {:?}", output_file))?;
+        let extension = match output_format {
+            FormatArgs::Json => "json",
+            FormatArgs::Yaml => "yaml",
+        };
+
+        let file_path = output_folder.join(format!("{mount}.{extension}"));
+        let file = std::fs::File::create(&file_path)
+            .with_context(|| format!("Failed to create file: {file_path:?}"))?;
 
         match output_format {
             FormatArgs::Json => {
                 serde_json::to_writer_pretty(file, &result)
-                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
             }
 
             FormatArgs::Yaml => {
                 yaml_serde::to_writer(&file, &result)
-                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
             }
         }
 
@@ -68,14 +77,14 @@ impl VaultExportBusiness {
         Ok(())
     }
 
-    async fn export_data(&self, root_path: &str) -> Result<Vec<VaultExportData>> {
+    async fn export_data(&self, mount: &str, root_path: &str) -> Result<Vec<VaultExportData>> {
         let mut results = Vec::new();
         let mut stack = vec![root_path.to_string()];
 
         while let Some(current_path) = stack.pop() {
             let items = self
                 .client
-                .list_paths(&current_path)
+                .list_paths(mount, &current_path)
                 .await
                 .inspect(|_| tracing::debug!("Listing path from {current_path}"))?;
 
@@ -89,7 +98,7 @@ impl VaultExportBusiness {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match self.client.find_all(&full_path).await {
+                    match self.client.find_all(mount, &full_path).await {
                         Ok(secret_data) => {
                             let cleaned_path = &full_path[1..];
                             results
@@ -105,5 +114,18 @@ impl VaultExportBusiness {
         }
 
         Ok(results)
+    }
+
+    fn check_folder(&self, folder: &PathBuf) -> Result<()> {
+        if folder.exists() && !folder.is_dir() {
+            anyhow::bail!("Output folder already exist and is not a directory");
+        }
+
+        if !folder.exists() {
+            std::fs::create_dir_all(folder)
+                .with_context(|| format!("Could not create output folder {}", folder.display()))?;
+        }
+
+        Ok(())
     }
 }

@@ -14,12 +14,11 @@ use crate::vault::VaultConfig;
 
 pub struct VaultClient {
     client: vaultrs::client::VaultClient,
-    mount: String,
     encode: bool,
 }
 
 impl VaultClient {
-    pub async fn new(config: VaultConfig, encode: bool) -> Result<Self> {
+    pub async fn new(config: &VaultConfig, encode: bool) -> Result<Self> {
         let client_builder = if let Some(token) = config.token.clone() {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
@@ -51,15 +50,11 @@ impl VaultClient {
         }
 
         tracing::debug!("Vault connection initialized");
-        Ok(Self {
-            client,
-            mount: config.mount.clone(),
-            encode,
-        })
+        Ok(Self { client, encode })
     }
 
-    pub async fn find(&self, path: &str, key: &str) -> Result<Secret> {
-        let result = self.find_all(path).await?;
+    pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<Secret> {
+        let result = self.find_all(mount, path).await?;
         let value = result
             .get(key)
             .with_context(|| format!("Key {key} not found"))?
@@ -68,10 +63,11 @@ impl VaultClient {
         Ok(value)
     }
 
-    pub async fn find_all(&self, path: &str) -> Result<HashMap<String, Secret>> {
-        let mut raw_results: HashMap<String, String> = kv2::read(&self.client, &self.mount, path)
-            .await
-            .with_context(|| format!("Error reading path {path}"))?;
+    pub async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
+        let mut raw_results: HashMap<String, String> =
+            kv2::read(&self.client, mount, path)
+                .await
+                .with_context(|| format!("Error reading path {path}"))?;
         let mut results = HashMap::new();
 
         for result in raw_results.iter_mut() {
@@ -86,8 +82,8 @@ impl VaultClient {
         Ok(results)
     }
 
-    pub async fn list_paths(&self, path: &str) -> Result<Vec<String>> {
-        let result = kv2::list(&self.client, &self.mount, path)
+    pub async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>> {
+        let result = kv2::list(&self.client, mount, path)
             .await
             .with_context(|| format!("Error listing path {path}"))?;
 

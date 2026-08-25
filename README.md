@@ -178,10 +178,10 @@ vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --
 ### Export secrets
 ```shell
 # JSON base64 export
-vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-file <OUTPUT_FILE>
+vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
 
 # YAML clear export
-vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-file <OUTPUT_FILE> --output-format yaml
+vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER> --output-format yaml
 ```
 
 ### Example
@@ -189,7 +189,7 @@ vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --outpu
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
 # Output: base64-encoded secret
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-file "./test.yml" --output-format yaml
+vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-folder "./tests" --output-format yaml
 # Output: in file
 ```
 
@@ -207,10 +207,9 @@ curl -H "Authorization: Bearer ${API_KEY}" https://api.example.com/data
 #!/bin/bash
 
 today="$(date +%Y-%m-%d)"
-backup_path="/path/to/backups"
-backup_file="${backup_path}/${today}.json"
+backup_path="/path/to/backups/${today}"
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-file "${backup_file}"
+vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-folder "${backup_file}"
 ```
 
 ## Helpers
