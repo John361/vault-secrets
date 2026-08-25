@@ -55,11 +55,16 @@ impl VaultExportBusiness {
         match output_format {
             FormatArgs::Json => {
                 serde_json::to_writer_pretty(file, &result)
-                    .inspect(|_| tracing::debug!("Exported secrets written in file"))
+                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+            }
+
+            FormatArgs::Yaml => {
+                yaml_serde::to_writer(&file, &result)
                     .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
             }
         }
 
+        tracing::debug!("Exported secrets written in file");
         Ok(())
     }
 

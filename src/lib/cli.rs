@@ -78,6 +78,7 @@ pub struct ExportArgs {
 pub enum FormatArgs {
     #[default]
     Json,
+    Yaml,
 }
 
 #[cfg(test)]
@@ -218,6 +219,8 @@ mod tests {
             "secret",
             "--output-file",
             "./secrets.json",
+            "--output-format",
+            "yaml",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -228,6 +231,7 @@ mod tests {
             Commands::Export(find_args) => {
                 assert_eq!(find_args.path, "secret");
                 assert_eq!(find_args.output_file, PathBuf::from("./secrets.json"));
+                assert_eq!(find_args.output_format, FormatArgs::Yaml);
             }
             _ => {}
         }
