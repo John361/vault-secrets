@@ -10,16 +10,25 @@ pub async fn run() -> Result<()> {
 
     match cli.command {
         Commands::Find(args) => {
-            let business = VaultFindBusiness::new(config.vault, !cli.clear_output).await?;
-            let result = business.find("", &args.path, &args.key).await?; // TODO: mount
-            println!("{result}");
+            if let Some(mount) = config.vault.mount.first() {
+                let business = VaultFindBusiness::new(&config.vault, !cli.clear_output).await?;
+                let result = business.find(mount, &args.path, &args.key).await?;
+                println!("{result}");
+            } else {
+                tracing::error!(
+                    "At least one mount path must be provided in the configuration file"
+                );
+            }
         }
 
         Commands::Export(args) => {
-            let business = VaultExportBusiness::new(config.vault, !cli.clear_output).await?;
-            business
-                .export("", &args.path, args.output_file, args.output_format) // TODO: mount
-                .await?;
+            let business = VaultExportBusiness::new(&config.vault, !cli.clear_output).await?;
+
+            for mount in config.vault.mount {
+                business
+                    .export(&mount, &args.path, &args.output_file, &args.output_format)
+                    .await?;
+            }
         }
     }
 

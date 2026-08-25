@@ -13,8 +13,8 @@ pub struct VaultFindBusiness {
 }
 
 impl VaultFindBusiness {
-    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(&config, encoded).await?;
+    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(config, encoded).await?;
         Ok(Self { client })
     }
 
@@ -33,8 +33,8 @@ pub struct VaultExportBusiness {
 }
 
 impl VaultExportBusiness {
-    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(&config, encoded).await?;
+    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(config, encoded).await?;
         Ok(Self { client })
     }
 
@@ -42,15 +42,15 @@ impl VaultExportBusiness {
         &self,
         mount: &str,
         root_path: &str,
-        output_file: PathBuf,
-        output_format: FormatArgs,
+        output_file: &PathBuf,
+        output_format: &FormatArgs,
     ) -> Result<()> {
         let result = self
             .export_data(mount, root_path)
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
 
-        let file = std::fs::File::create(&output_file)
+        let file = std::fs::File::create(output_file)
             .with_context(|| format!("Failed to create file: {:?}", output_file))?;
 
         match output_format {
