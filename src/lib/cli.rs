@@ -1,6 +1,7 @@
-use clap::Args;
-use clap::Parser;
 use std::path::PathBuf;
+
+use clap::Parser;
+use clap::{Args, ValueEnum};
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
@@ -15,7 +16,10 @@ pub struct Cli {
     )]
     pub config: String,
 
-    #[arg(long = "clear-output", help = "Encode output data (optional)")]
+    #[arg(
+        long = "clear-output",
+        help = "Encode output data (optional, default: false)"
+    )]
     pub clear_output: bool,
 }
 
@@ -60,6 +64,20 @@ pub struct ExportArgs {
 
     #[arg(long, help = "Output file path (required)", required = true)]
     pub output_file: PathBuf,
+
+    #[arg(
+        long,
+        help = "Output format (optional, default: json)",
+        default_value_t = FormatArgs::Json,
+        value_enum
+    )]
+    pub output_format: FormatArgs,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, ValueEnum)]
+pub enum FormatArgs {
+    #[default]
+    Json,
 }
 
 #[cfg(test)]
@@ -102,7 +120,7 @@ mod tests {
             "--path",
             "secret",
             "--output-file",
-            "./secret.json"
+            "./secret.json",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -112,6 +130,7 @@ mod tests {
             Commands::Export(find_args) => {
                 assert_eq!(find_args.path, "secret");
                 assert_eq!(find_args.output_file, PathBuf::from("./secret.json"));
+                assert_eq!(find_args.output_format, FormatArgs::Json);
             }
             _ => {}
         }
@@ -198,7 +217,7 @@ mod tests {
             "--path",
             "secret",
             "--output-file",
-            "./secrets.json"
+            "./secrets.json",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();

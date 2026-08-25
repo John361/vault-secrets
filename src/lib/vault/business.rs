@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
+use crate::cli::FormatArgs;
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultExportData;
@@ -37,7 +38,12 @@ impl VaultExportBusiness {
         Ok(Self { client })
     }
 
-    pub async fn export(&self, root_path: &str, output_file: PathBuf) -> Result<()> {
+    pub async fn export(
+        &self,
+        root_path: &str,
+        output_file: PathBuf,
+        output_format: FormatArgs,
+    ) -> Result<()> {
         let result = self
             .export_data(root_path)
             .await
@@ -46,9 +52,13 @@ impl VaultExportBusiness {
         let file = std::fs::File::create(&output_file)
             .with_context(|| format!("Failed to create file: {:?}", output_file))?;
 
-        serde_json::to_writer_pretty(file, &result)
-            .inspect(|_| tracing::debug!("Exported secrets written in file"))
-            .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+        match output_format {
+            FormatArgs::Json => {
+                serde_json::to_writer_pretty(file, &result)
+                    .inspect(|_| tracing::debug!("Exported secrets written in file"))
+                    .with_context(|| format!("Failed to write to file: {:?}", output_file))?;
+            }
+        }
 
         Ok(())
     }
