@@ -23,24 +23,35 @@ pub struct RealVaultProvider {
 
 impl RealVaultProvider {
     pub async fn new(config: &VaultConfig) -> Result<Self> {
-        let mut client = vaultrs::client::VaultClient::new(
+        let client_builder = if let Some(token) = config.token.clone() {
+            VaultClientSettingsBuilder::default()
+                .address(config.address.clone())
+                .token(token.deref().to_string())
+                .build()
+                .context("Failed to build Vault settings")?
+        } else {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
                 .build()
-                .context("Failed to build Vault settings")?,
-        )
-        .context("Failed to create Vault client")?;
-
-        let login = UserpassLogin {
-            // TODO: avoid unwrap
-            username: config.username.clone().unwrap().clone(),
-            password: config.password.clone().unwrap().deref().to_string(),
+                .context("Failed to build Vault settings")?
         };
 
-        client
-            .login("userpass", &login)
-            .await
-            .context("Failed to login to Vault")?;
+        let mut client = vaultrs::client::VaultClient::new(client_builder)
+            .context("Failed to create Vault client")?;
+
+        if let Some(username) = config.username.clone()
+            && let Some(password) = config.password.clone()
+        {
+            let login = UserpassLogin {
+                username,
+                password: password.deref().to_string(),
+            };
+
+            client
+                .login("userpass", &login)
+                .await
+                .context("Failed to login to Vault")?;
+        }
 
         tracing::debug!("Vault connection initialized");
 
