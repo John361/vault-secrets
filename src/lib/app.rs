@@ -30,6 +30,8 @@ pub async fn run() -> Result<()> {
                     .await?;
             }
         }
+
+        Commands::Import(_args) => {}
     }
 
     Ok(())

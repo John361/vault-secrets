@@ -10,7 +10,7 @@ A secure, lightweight Rust CLI application designed to fetch secrets from Hashic
 
 This tool is specifically built for server automation scripts, allowing server administrators to securely retrieve runtime secrets without hardcoding credentials on the host system.
 
-Vault Secrets can also be used to export secrets from a Hashicorp Vault instances. This is useful for extracted backups.
+Vault Secrets can also be used to export or import secrets from and to a Hashicorp Vault instances. This is useful for extracted backups.
 
 ## Overview
 Vault Secrets is designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
@@ -19,6 +19,7 @@ Key Features:
 - **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
 - **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
 - **Data export:** Export your data from your instance to a dedicated file
+- **Data import:** Import your data to your instance from a dedicated file
 - **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - **Reliability:** Lightweight and fast, written in Rust
@@ -185,6 +186,15 @@ vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPU
 vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER> --output-format yaml
 ```
 
+### Import secrets
+```shell
+# JSON base64 import
+vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
+
+# YAML clear import
+vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input-folder <OUTPUT_FOLDER> --input-format yaml
+```
+
 ### Example
 ```shell
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
@@ -192,6 +202,9 @@ vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/
 
 vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-folder "./tests" --output-format yaml
 # Output: in file
+
+vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output input --path "" --input-folder "./tests" --input-format yaml
+# Output: in your instance
 ```
 
 ### Using in Shell Scripts
@@ -211,6 +224,16 @@ today="$(date +%Y-%m-%d)"
 backup_path="/path/to/backups/${today}"
 
 vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-folder "${backup_file}"
+```
+
+#### Example for import cron jobs
+```shell
+#!/bin/bash
+
+today="$(date +%Y-%m-%d)"
+backup_path="/path/to/backups/${today}"
+
+vault-secrets --config /etc/vault-secrets/app.conf.yml import --path "" --input-folder "${backup_file}"
 ```
 
 ## Helpers
