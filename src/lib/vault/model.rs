@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::Serialize;
 
-#[derive(Debug, Serialize)] // TODO: remove debug
+#[derive(Serialize)]
 pub struct VaultExportData {
     pub path: String,
     pub data: HashMap<String, String>, // TODO: think about secrets protection on JSON export

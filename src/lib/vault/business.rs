@@ -1,14 +1,15 @@
 use std::collections::HashMap;
+
 use anyhow::Result;
 
-use crate::vault::{VaultClient, VaultExportData, VaultProvider};
+use crate::vault::{VaultClient, VaultExportData};
 
-pub struct VaultExportBusiness<T: VaultProvider> {
-    client: VaultClient<T>,
+pub struct VaultExportBusiness {
+    client: VaultClient,
 }
 
-impl<T: VaultProvider> VaultExportBusiness<T> {
-    pub fn new(client: VaultClient<T>) -> Self {
+impl VaultExportBusiness {
+    pub fn new(client: VaultClient) -> Self {
         Self { client }
     }
 
