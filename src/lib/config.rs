@@ -48,7 +48,7 @@ mod tests {
           address: "http://localhost:8200"
           username: "user"
           password: "pass"
-          request_interval_sec: 3
+          request_interval_ms: 200
         find:
           mount: "secret"
         export:
@@ -73,6 +73,7 @@ mod tests {
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.username.unwrap(), "user");
         assert_eq!(config.vault.password.unwrap().deref(), "pass");
+        assert_eq!(config.vault.request_interval_ms, 200);
     }
 
     #[test]
@@ -81,7 +82,7 @@ mod tests {
         vault:
           address: "http://localhost:8200"
           token: "token"
-          request_interval_sec: 3
+          request_interval_ms: 200
         find:
           mount: "secret"
         export:
@@ -105,6 +106,7 @@ mod tests {
         let config = result.unwrap();
         assert_eq!(config.vault.address, "http://localhost:8200");
         assert_eq!(config.vault.token.unwrap().deref(), "token");
+        assert_eq!(config.vault.request_interval_ms, 200);
     }
 
     #[test]

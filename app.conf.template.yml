@@ -13,7 +13,7 @@ vault:
   username: "vault-secrets"
   password: "changeme"
   token: "changeme"
-  request_interval_sec: 3
+  request_interval_ms: 200
 
 find:
   mount: "vault-secrets-dev"

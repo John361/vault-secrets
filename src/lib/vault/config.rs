@@ -8,7 +8,7 @@ pub struct VaultConfig {
     pub username: Option<String>,
     pub password: Option<Secret>,
     pub token: Option<Secret>,
-    pub request_interval_sec: u16,
+    pub request_interval_ms: u64,
 }
 
 #[derive(Deserialize)]
@@ -39,7 +39,7 @@ mod tests {
             "username": "admin",
             "password": "my_secret_password",
             "token": "my_secret_token",
-            "request_interval_sec": 3
+            "request_interval_ms": 200
         }
         "#;
 
@@ -49,7 +49,7 @@ mod tests {
         assert_eq!(config.username, Some("admin".to_string()));
         assert_eq!(config.password.unwrap().deref(), "my_secret_password");
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
-        assert_eq!(config.request_interval_sec, 3);
+        assert_eq!(config.request_interval_ms, 200);
     }
 
     #[test]
@@ -98,7 +98,7 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "changeme",
-            "request_interval_sec": 3
+            "request_interval_ms": 200
         }
         "#;
 
@@ -112,7 +112,7 @@ mod tests {
         {
             "address": "http://localhost:8200",
             "token": "changeme",
-            "request_interval_sec": 3
+            "request_interval_ms": 200
         }
         "#;
 
@@ -128,7 +128,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: Some(Secret::new("top_secret".to_string())),
             token: None,
-            request_interval_sec: 3,
+            request_interval_ms: 200,
         };
 
         assert_eq!(config.password.unwrap().deref(), "top_secret");
@@ -141,7 +141,7 @@ mod tests {
             username: Some("admin".to_string()),
             password: None,
             token: Some(Secret::new("top_secret".to_string())),
-            request_interval_sec: 3,
+            request_interval_ms: 200,
         };
 
         assert_eq!(config.token.unwrap().deref(), "top_secret");

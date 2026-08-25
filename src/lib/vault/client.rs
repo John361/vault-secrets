@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::ops::Deref;
+use std::time::Duration;
 
 use anyhow::{Context, Result};
 use base64::Engine;
@@ -17,6 +18,7 @@ use crate::vault::model::VaultData;
 pub struct VaultClient {
     client: vaultrs::client::VaultClient,
     encode: bool,
+    request_interval_ms: u64,
 }
 
 impl VaultClient {
@@ -52,7 +54,11 @@ impl VaultClient {
         }
 
         tracing::debug!("Vault connection initialized");
-        Ok(Self { client, encode })
+        Ok(Self {
+            client,
+            encode,
+            request_interval_ms: config.request_interval_ms,
+        })
     }
 
     pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<Secret> {
@@ -81,6 +87,7 @@ impl VaultClient {
             results.insert(result.0.to_string(), secret);
         }
 
+        self.sleep().await;
         Ok(results)
     }
 
@@ -89,6 +96,7 @@ impl VaultClient {
             .await
             .with_context(|| format!("Error listing path {path}"))?;
 
+        self.sleep().await;
         Ok(result)
     }
 
@@ -119,8 +127,14 @@ impl VaultClient {
             }
 
             kv2::set(&self.client, mount, &item.path, &item.data).await?;
+            self.sleep().await;
         }
 
         Ok(())
+    }
+
+    async fn sleep(&self) {
+        let request_interval = Duration::from_millis(self.request_interval_ms);
+        tokio::time::sleep(request_interval).await;
     }
 }
