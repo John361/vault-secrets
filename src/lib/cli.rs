@@ -8,12 +8,14 @@ pub struct Cli {
     pub command: Commands,
 
     #[arg(
-        short = 'c',
         long = "config",
         required = true,
         help = "Path to config file (required)"
     )]
     pub config: String,
+
+    #[arg(long = "clear-output", help = "Encode output data (optional)")]
+    pub clear_output: bool,
 }
 
 impl Cli {
@@ -167,6 +169,7 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
+        assert_eq!(cli.clear_output, false);
 
         match cli.command {
             Commands::Find(find_args) => {
@@ -181,6 +184,7 @@ mod tests {
     fn test_cli_load_export_uses_parse() {
         let args = vec![
             "vault-secrets",
+            "--clear-output",
             "--config",
             "/tmp/config.yaml",
             "export",
@@ -190,6 +194,7 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
+        assert_eq!(cli.clear_output, true);
 
         match cli.command {
             Commands::Export(find_args) => {
