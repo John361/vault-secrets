@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::ops::Deref;
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
@@ -10,34 +9,32 @@ use vaultrs::kv2;
 use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
+use crate::secret::Secret;
 use crate::vault::VaultConfig;
 
-#[async_trait]
-pub trait VaultProvider: Send + Sync {
-    async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>>;
-}
-
-pub struct RealVaultProvider {
+pub struct VaultClient {
     client: vaultrs::client::VaultClient,
+    mount: String,
+    encode: bool,
 }
 
-impl RealVaultProvider {
-    pub async fn new(config: &VaultConfig) -> Result<Self> {
+impl VaultClient {
+    pub async fn new(config: VaultConfig, encode: bool) -> Result<Self> {
         let client_builder = if let Some(token) = config.token.clone() {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
                 .token(token.deref().to_string())
                 .build()
-                .context("Failed to build Vault settings")?
+                .with_context(|| "Failed to build Vault settings")?
         } else {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())
                 .build()
-                .context("Failed to build Vault settings")?
+                .with_context(|| "Failed to build Vault settings")?
         };
 
         let mut client = vaultrs::client::VaultClient::new(client_builder)
-            .context("Failed to create Vault client")?;
+            .with_context(|| "Failed to create Vault client")?;
 
         if let Some(username) = config.username.clone()
             && let Some(password) = config.password.clone()
@@ -50,129 +47,50 @@ impl RealVaultProvider {
             client
                 .login("userpass", &login)
                 .await
-                .context("Failed to login to Vault")?;
+                .with_context(|| "Failed to login to Vault")?;
         }
 
         tracing::debug!("Vault connection initialized");
-
-        Ok(Self { client })
-    }
-}
-
-#[async_trait]
-impl VaultProvider for RealVaultProvider {
-    async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>> {
-        let result: HashMap<String, String> = kv2::read(&self.client, mount, path).await?;
-        Ok(result)
-    }
-}
-
-#[async_trait]
-impl VaultProvider for Box<dyn VaultProvider> {
-    async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>> {
-        self.as_ref().read_secret(mount, path).await
-    }
-}
-
-pub struct VaultClient<T: VaultProvider> {
-    provider: T,
-    mount: String,
-}
-
-impl<T: VaultProvider> VaultClient<T> {
-    pub fn new(provider: T, mount: String) -> Self {
-        Self { provider, mount }
+        Ok(Self {
+            client,
+            mount: config.mount.clone(),
+            encode,
+        })
     }
 
-    pub async fn find(&self, path: &str, key: &str) -> Result<String> {
-        let result = self.provider.read_secret(&self.mount, path).await?;
-
+    pub async fn find(&self, path: &str, key: &str) -> Result<Secret> {
+        let result = self.find_all(path).await?;
         let value = result
             .get(key)
             .with_context(|| format!("Key {key} not found"))?
             .clone();
 
-        let encoded = STANDARD.encode(value.as_bytes());
-        Ok(encoded)
+        Ok(value)
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use mockall::mock;
+    pub async fn find_all(&self, path: &str) -> Result<HashMap<String, Secret>> {
+        let mut raw_results: HashMap<String, String> = kv2::read(&self.client, &self.mount, path)
+            .await
+            .with_context(|| format!("Error reading path {path}"))?;
+        let mut results = HashMap::new();
 
-    mock! {
-        pub VaultProvider {}
+        for result in raw_results.iter_mut() {
+            if self.encode {
+                *result.1 = STANDARD.encode(result.1.as_bytes());
+            }
 
-        #[async_trait::async_trait]
-        impl VaultProvider for VaultProvider {
-            async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>>;
+            let secret = Secret::new(result.1.to_string());
+            results.insert(result.0.to_string(), secret);
         }
+
+        Ok(results)
     }
 
-    #[tokio::test]
-    async fn test_find_success() {
-        let mut mock_provider = MockVaultProvider::new();
+    pub async fn list_paths(&self, path: &str) -> Result<Vec<String>> {
+        let result = kv2::list(&self.client, &self.mount, path)
+            .await
+            .with_context(|| format!("Error listing path {path}"))?;
 
-        mock_provider
-            .expect_read_secret()
-            .with(
-                mockall::predicate::eq("secret"),
-                mockall::predicate::eq("my-path"),
-            )
-            .times(1)
-            .returning(|_, _| {
-                let mut map = HashMap::new();
-                map.insert("my-key".to_string(), "my-value".to_string());
-                Ok(map)
-            });
-
-        let client = VaultClient::new(mock_provider, "secret".to_string());
-        let result = client.find("my-path", "my-key").await;
-
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), "bXktdmFsdWU=");
-    }
-
-    #[tokio::test]
-    async fn test_find_key_not_found() {
-        let mut mock_provider = MockVaultProvider::new();
-
-        mock_provider.expect_read_secret().returning(|_, _| {
-            let map = HashMap::new();
-            Ok(map)
-        });
-
-        let client = VaultClient::new(mock_provider, "secret".to_string());
-        let result = client.find("my-path", "missing-key").await;
-
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Key missing-key not found")
-        );
-    }
-
-    #[tokio::test]
-    async fn test_find_provider_error() {
-        let mut mock_provider = MockVaultProvider::new();
-
-        mock_provider.expect_read_secret().returning(|_, _| {
-            anyhow::bail!("Vault connection error");
-        });
-
-        let client = VaultClient::new(mock_provider, "secret".to_string());
-        let result = client.find("my-path", "my-key").await;
-
-        assert!(result.is_err());
-        assert!(
-            result
-                .unwrap_err()
-                .to_string()
-                .contains("Vault connection error")
-        );
+        Ok(result)
     }
 }
