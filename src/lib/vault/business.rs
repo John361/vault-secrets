@@ -1,20 +1,26 @@
 use std::collections::HashMap;
-
 use anyhow::Result;
 
-use crate::secret::Secret;
 use crate::vault::{VaultClient, VaultExportData, VaultProvider};
 
-pub struct VaultBusiness<T: VaultProvider> {
+pub struct VaultExportBusiness<T: VaultProvider> {
     client: VaultClient<T>,
 }
 
-impl<T: VaultProvider> VaultBusiness<T> {
+impl<T: VaultProvider> VaultExportBusiness<T> {
     pub fn new(client: VaultClient<T>) -> Self {
         Self { client }
     }
 
-    pub async fn export_vault_secrets(&self, root_path: &str) -> Result<Vec<VaultExportData>> {
+    pub async fn export(&self, root_path: &str) -> Result<()> {
+        let result = self.export_data(root_path).await?;
+        let result = serde_json::to_value(&result)?;
+
+        println!("{}", result);
+        Ok(())
+    }
+
+    async fn export_data(&self, root_path: &str) -> Result<Vec<VaultExportData>> {
         let mut results = Vec::new();
         let mut stack = vec![root_path.to_string()];
 
@@ -31,7 +37,7 @@ impl<T: VaultProvider> VaultBusiness<T> {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match self.read_secret_data(&full_path).await {
+                    match self.read_data(&full_path).await {
                         Ok(secret_data) => {
                             results.push(VaultExportData::new(full_path, secret_data));
                         }
@@ -47,14 +53,8 @@ impl<T: VaultProvider> VaultBusiness<T> {
         Ok(results)
     }
 
-    async fn read_secret_data(&self, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_data = self.client.find_all(path, false).await?;
-        let mut secrets = HashMap::new();
-
-        for data in raw_data {
-            secrets.insert(data.0, Secret::new(data.1));
-        }
-
-        Ok(secrets)
+    async fn read_data(&self, path: &str) -> Result<HashMap<String, String>> {
+        let result = self.client.find_all(path, false).await?;
+        Ok(result)
     }
 }
