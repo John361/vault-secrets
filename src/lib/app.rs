@@ -44,6 +44,7 @@ mod tests {
         #[async_trait::async_trait]
         impl VaultProvider for VaultProvider {
             async fn read_secret(&self, mount: &str, path: &str) -> Result<HashMap<String, String>>;
+            async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>>;
         }
     }
 
@@ -58,7 +59,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_run_with_vault_client_success() {
+    async fn test_run_find_with_vault_client_success() {
         let mut mock_provider = MockVaultProvider::new();
 
         mock_provider
@@ -83,6 +84,34 @@ mod tests {
         let result = run_with_vault_client(cli, client).await;
         assert!(result.is_ok());
     }
+
+    // #[tokio::test]
+    // async fn test_run_list_paths_with_vault_client_success() {
+    //     let mut mock_provider = MockVaultProvider::new();
+    //
+    //     mock_provider
+    //         .expect_list_paths()
+    //         .with(
+    //             mockall::predicate::eq("secret"),
+    //             mockall::predicate::eq("my-path"),
+    //         )
+    //         .times(1)
+    //         .returning(|_, _| {
+    //             let mut list = Vec::new();
+    //             list.push("my-sub-path-1".to_string());
+    //             list.push("my-sub-path-2".to_string());
+    //             Ok(list)
+    //         });
+    //
+    //     let client = VaultClient::new(
+    //         Box::new(mock_provider) as Box<dyn VaultProvider>,
+    //         "secret".to_string(),
+    //     );
+    //
+    //     let cli = create_cli_for_find();
+    //     let result = run_with_vault_client(cli, client).await;
+    //     assert!(result.is_ok());
+    // }
 
     #[tokio::test]
     async fn test_run_with_vault_client_error() {
