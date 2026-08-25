@@ -1,11 +1,11 @@
 [package]
 name         = "vault-secrets"
-description  = "A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format."
+description  = "A secure, lightweight Rust CLI application designed to fetch secrets from Hashicorp Vault and output them in base64 format. Exports and imports from and to Vault instance is also supported."
 authors      = ["John H"]
 repository   = "https://github.com/John361/vault-secrets"
 readme       = "README.md"
 license-file = "LICENSE"
-version      = "0.1.5"
+version      = "0.2.0"
 edition      = "2024"
 categories   = ["command-line-utilities", "security"]
 
