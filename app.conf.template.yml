@@ -5,6 +5,7 @@
 # Mount information:
 # - On find command, only the first one will be used
 # - On export command, all values will be used
+# - On import command, if the mount paths do not exist, make sure you have enough permissions to create them
 vault:
   address: "http://127.0.0.1:8200"
   username: "vault-secrets"

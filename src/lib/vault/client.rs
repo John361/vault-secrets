@@ -6,11 +6,13 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::kv2;
+use vaultrs::sys::mount;
 use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
 use crate::vault::VaultConfig;
+use crate::vault::model::VaultData;
 
 pub struct VaultClient {
     client: vaultrs::client::VaultClient,
@@ -88,5 +90,37 @@ impl VaultClient {
             .with_context(|| format!("Error listing path {path}"))?;
 
         Ok(result)
+    }
+
+    pub async fn set_all(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
+        let mount_exists = mount::list(&self.client)
+            .await
+            .with_context(|| "Error listing mounts")?
+            .contains_key(mount);
+
+        if !mount_exists {
+            mount::enable(&self.client, mount, "kv-v2", None).await?;
+            tracing::debug!("Mount {mount} enabled");
+        }
+
+        for item in data_list.iter_mut() {
+            if self.encode {
+                for (key, secret) in item.data.iter_mut() {
+                    let decoded = STANDARD.decode(secret.as_bytes()).with_context(|| {
+                        format!("Error decoding data for key {key} on path {}", item.path)
+                    })?;
+
+                    let decoded = String::from_utf8(decoded).with_context(|| {
+                        format!("Error converting data for key {key} on path {}", item.path)
+                    })?;
+
+                    *secret = Secret::new(decoded);
+                }
+            }
+
+            kv2::set(&self.client, mount, &item.path, &item.data).await?;
+        }
+
+        Ok(())
     }
 }
