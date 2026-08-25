@@ -102,12 +102,9 @@ mod tests {
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
 
-        match cli.command {
-            Commands::Find(find_args) => {
-                assert_eq!(find_args.path, "secret/data/mysql");
-                assert_eq!(find_args.key, "password");
-            }
-            _ => {}
+        if let Commands::Find(args) = &cli.command {
+            assert_eq!(args.path, "secret/data/mysql");
+            assert_eq!(args.key, "password");
         }
     }
 
@@ -127,13 +124,10 @@ mod tests {
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
 
-        match cli.command {
-            Commands::Export(find_args) => {
-                assert_eq!(find_args.path, "secret");
-                assert_eq!(find_args.output_file, PathBuf::from("./secret.json"));
-                assert_eq!(find_args.output_format, FormatArgs::Json);
-            }
-            _ => {}
+        if let Commands::Export(args) = &cli.command {
+            assert_eq!(args.path, "secret");
+            assert_eq!(args.output_file, PathBuf::from("./secret.json"));
+            assert_eq!(args.output_format, FormatArgs::Json);
         }
     }
 
@@ -196,14 +190,11 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
-        assert_eq!(cli.clear_output, false);
+        assert!(!cli.clear_output);
 
-        match cli.command {
-            Commands::Find(find_args) => {
-                assert_eq!(find_args.path, "secret/data/mysql");
-                assert_eq!(find_args.key, "password");
-            }
-            _ => {}
+        if let Commands::Find(args) = cli.command {
+            assert_eq!(args.path, "secret/data/mysql");
+            assert_eq!(args.key, "password");
         }
     }
 
@@ -225,15 +216,12 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
-        assert_eq!(cli.clear_output, true);
+        assert!(cli.clear_output);
 
-        match cli.command {
-            Commands::Export(find_args) => {
-                assert_eq!(find_args.path, "secret");
-                assert_eq!(find_args.output_file, PathBuf::from("./secrets.json"));
-                assert_eq!(find_args.output_format, FormatArgs::Yaml);
-            }
-            _ => {}
+        if let Commands::Export(args) = cli.command {
+            assert_eq!(args.path, "secret");
+            assert_eq!(args.output_file, PathBuf::from("./secrets.json"));
+            assert_eq!(args.output_format, FormatArgs::Yaml);
         }
     }
 }
