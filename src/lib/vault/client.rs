@@ -133,6 +133,8 @@ impl VaultClient {
 
         if !mount_exists {
             mount::enable(&self.client, mount, "kv-v2", None).await?;
+
+            self.sleep().await;
             tracing::debug!("Mount {mount} enabled");
         }
 
