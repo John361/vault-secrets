@@ -1,5 +1,4 @@
 use serde::Deserialize;
-
 use crate::secret::Secret;
 
 #[derive(Deserialize)]
@@ -12,25 +11,11 @@ pub struct VaultConfig {
     pub encryption_passphrase: Secret,
 }
 
-#[derive(Deserialize)]
-pub struct VaultFindConfig {
-    pub mount: String,
-}
-
-#[derive(Deserialize)]
-pub struct VaultExportConfig {
-    pub mounts: Vec<String>,
-}
-
-#[derive(Deserialize)]
-pub struct VaultImportConfig {
-    pub mounts: Vec<String>,
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::ops::Deref;
+    use crate::vault::{VaultExportConfig, VaultFindConfig, VaultImportConfig};
 
     #[test]
     fn test_deserialize_vault_config_json() {
