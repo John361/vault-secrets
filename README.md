@@ -13,22 +13,24 @@ This tool is specifically built for server automation scripts, allowing server a
 Vault Secrets can also be used to export or import secrets from and to a Hashicorp Vault instances. This is useful for extracted backups.
 
 ## Overview
-Vault Secrets is designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
+Vault Secrets is originally designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
+
+For personal convenient, it is always designed for full secrets exports and imports secrets backups. It's ok babe, I am thinking about you. :sunglasses:
 
 Key Features:
-- **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
-- **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
-- **Data export:** Export your data from your instance to a dedicated file
-- **Data import:** Import your data to your instance from a dedicated file
-- **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
-- **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
-- **Reliability:** Lightweight and fast, written in Rust
-- **Continuous Integration:** Automated linting, testing, and formatting checks on every pull request to ensure code quality and prevent regressions
-- **Integration:** Integrates seamlessly with existing automation and CI/CD pipelines
-- **Security:** Continuous code quality and vulnerability scanning integrated via SonarCloud
+- :lock: **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
+- :file_folder: **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
+- :outbox_tray: **Data export:** Export your data from your instance to a dedicated file with managed encryption
+- :inbox_tray: **Data import:** Import your data to your instance from a dedicated file with managed encryption
+- :package: **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
+- :scroll: **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
+- :crab: **Reliability:** Lightweight and fast, written in Rust
+- :arrows_counterclockwise: **Continuous Integration:** Automated linting, testing, and formatting checks on every pull request to ensure code quality and prevent regressions
+- :link: **Integration:** Integrates seamlessly with existing automation and CI/CD pipelines
+- :shield: **Security:** Continuous code quality and vulnerability scanning integrated via SonarCloud
 
 ## Installation
-### Debian/Ubuntu Repository (Recommended)
+### :package: Debian/Ubuntu Repository (Recommended)
 Add the official repository and install the package:
 ```shell
 # Add the GPG key
@@ -49,12 +51,12 @@ sudo apt install vault-secrets
 ```
 After installation, configure the app by editing `/etc/vault-secrets/app.conf.yml` with your Vault connection details.
 
-### Ansible Automation
+### :magic_wand: Ansible Automation
 For automated deployments across multiple servers, use our official Ansible role:
 
 [ansible-vault-secrets](https://github.com/John361/ansible-vault-secrets) - Manages installation, configuration, and updates.
 
-### Manual binary installation
+### :floppy_disk: Manual binary installation
 Download the latest `.deb` package from the [Releases](https://github.com/John361/vault-secrets/releases) page and install it manually:
 ```shell
 sudo apt install ./vault-secrets_<version>_amd64.deb
@@ -64,8 +66,8 @@ sudo nano /etc/vault-secrets/app.conf.yml
 sudo chmod 400 /etc/vault-secrets/app.conf.yml
 ```
 
-## Development environment
-### Prerequisites
+## :test_tube: Development environment
+### :clipboard: Prerequisites
 ```shell
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
@@ -78,8 +80,8 @@ rustup update
 cargo install cargo-deb
 ```
 
-### Starting the local development stack
-#### Docker
+### :rocket: Starting the local development stack
+#### :whale: Docker
 ```shell
 cd ops/docker
 
@@ -91,7 +93,7 @@ cp .env.template .env # Then replace all 'changeme' values (check on helpers sec
 docker compose up --build # Access and configure Vault from the web ui (use only 1 key for simplicity)
 ```
 
-#### Initialize Vault Credentials with Python
+#### :snake: Initialize Vault Credentials with Python
 ```shell
 cd ops/scripts/python
 uv sync
@@ -100,7 +102,7 @@ source .venv/bin/activate
 python vault_init_credentials.py --app-name vault-secrets --environment dev
 ```
 
-#### Provision Secrets with Terraform/Terragrunt
+#### :building_construction: Provision Secrets with Terraform/Terragrunt
 ```shell
 echo "postgresql://terraform:changeme@127.0.0.1:5432/terraform?sslmode=disable" >> ops/terraform/.postgres_backend_uri_dev
 
@@ -117,14 +119,14 @@ cd vault/auth-backend-userpass
 terragrunt plan && terragrunt apply --auto-approve
 ```
 
-#### Test the Rust application
+#### :crab: Test the Rust application
 ```shell
 cp app.conf.template.yml app.conf.yml # # Then replace all 'changeme' values
 
 RUST_LOG=debug cargo run -- --config app.conf.yml --help
 ```
 
-#### Run linters
+#### :mag: Run linters
 ```shell
 # Rust
 cargo check --all-targets --all-features
@@ -145,7 +147,7 @@ uv run --frozen ruff check --output-format=github .
 uv run --frozen ruff format --check
 ```
 
-#### Run tests
+#### :white_check_mark: Run tests
 ```shell
 # Rust
 cargo test
@@ -155,20 +157,20 @@ cd ops/scripts/python
 uv run --frozen pytest --cov=vault_init_credentials --cov-report=term-missing --cov-report=xml
 ```
 
-## Building from source
-### Release binary
+## :wrench: Building from source
+### :package: Release binary
 ```shell
 cargo build --release
 ```
 
-### Debian package
+### :package: Debian package
 ```shell
 cargo deb
 ```
 The `.deb` package will be generated in `target/debian/` folder.
 
-## Usage
-### Find secrets
+## :book: Usage
+### :mag: Find secrets
 ```shell
 # Base64 output
 vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
@@ -177,7 +179,7 @@ vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY
 vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --key <SECRET_KEY>
 ```
 
-### Export secrets
+### :outbox_tray: Export secrets
 ```shell
 # JSON base64 export
 vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
@@ -186,7 +188,7 @@ vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPU
 vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER> --output-format yaml
 ```
 
-### Import secrets
+### :inbox_tray: Import secrets
 ```shell
 # JSON base64 import
 vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
@@ -195,7 +197,7 @@ vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT
 vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input-folder <OUTPUT_FOLDER> --input-format yaml
 ```
 
-### Example
+### :bulb: Example
 ```shell
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
 # Output: base64-encoded secret
@@ -207,8 +209,8 @@ vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output input --pa
 # Output: in your instance
 ```
 
-### Using in Shell Scripts
-#### Example for cron jobs
+### :scroll: Using in Shell Scripts
+#### :calendar: Example for cron jobs
 ```shell
 #!/bin/bash
 
@@ -216,7 +218,7 @@ API_KEY=$(vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "va
 curl -H "Authorization: Bearer ${API_KEY}" https://api.example.com/data
 ```
 
-#### Example for export cron jobs
+#### :calendar: :outbox_tray: Example for export cron jobs
 ```shell
 #!/bin/bash
 
@@ -226,7 +228,7 @@ backup_path="/path/to/backups/${today}"
 vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-folder "${backup_file}"
 ```
 
-#### Example for import cron jobs
+#### :calendar: :inbox_tray: Example for import cron jobs
 ```shell
 #!/bin/bash
 
@@ -236,9 +238,9 @@ backup_path="/path/to/backups/${today}"
 vault-secrets --config /etc/vault-secrets/app.conf.yml import --path "" --input-folder "${backup_file}"
 ```
 
-## Helpers
+## :hammer_and_wrench: Helpers
 - Generate a random password: `tr -dc A-Za-z0-9 </dev/urandom | head -c "20" ; echo ''`
 
-## License
+## :scroll: License
 This project is licensed under the GNU Affero General Public License v3.0 - see the LICENSE file for details.
 This license requires that modifications to this software, even when used over a network, must be made available to the users. For more information, see the GNU AGPLv3 documentation.
