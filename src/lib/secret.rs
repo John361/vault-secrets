@@ -1,8 +1,8 @@
 use std::fmt;
 use std::ops::Deref;
 
-use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
 use aes_gcm::aead::Aead;
+use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
 use anyhow::Result;
 use pbkdf2::pbkdf2_hmac;
 use serde::{Deserialize, Serialize};
@@ -53,14 +53,14 @@ impl EncryptedSecret {
         key
     }
 
-    pub fn encrypt(secret: &str, password: &str) -> Result<EncryptedSecret> {
+    pub fn encrypt(secret: &str, passphrase: &str) -> Result<EncryptedSecret> {
         let mut salt = [0u8; 32];
         rand::fill(&mut salt);
 
         let mut nonce = [0u8; 12];
         rand::fill(&mut nonce);
 
-        let key = Self::derive_key(password, &salt);
+        let key = Self::derive_key(passphrase, &salt);
         let key = Key::<Aes256Gcm>::try_from(key)?;
         let nonce = Nonce::try_from(nonce)?;
         let cipher = Aes256Gcm::new(&key);
@@ -73,8 +73,8 @@ impl EncryptedSecret {
         })
     }
 
-    pub fn decrypt(encrypted: &EncryptedSecret, password: &str) -> Result<String> {
-        let key = Self::derive_key(password, &encrypted.salt);
+    pub fn decrypt(encrypted: &EncryptedSecret, passphrase: &str) -> Result<String> {
+        let key = Self::derive_key(passphrase, &encrypted.salt);
         let key = Key::<Aes256Gcm>::try_from(key)?;
         let nonce = Nonce::try_from(encrypted.nonce)?;
         let cipher = Aes256Gcm::new(&key);
