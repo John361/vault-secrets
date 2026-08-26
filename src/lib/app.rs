@@ -18,7 +18,7 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Export(args) => {
-            let business = VaultExportBusiness::new(&config.vault, !cli.clear_output).await?;
+            let business = VaultExportBusiness::new(config.vault, !cli.clear_output).await?;
 
             for mount in config.export.mounts {
                 business

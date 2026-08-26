@@ -3,18 +3,20 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use crate::cli::FormatArgs;
+use crate::secret::EncryptedSecret;
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
 
 pub struct VaultExportBusiness {
     client: VaultClient,
+    config: VaultConfig,
 }
 
 impl VaultExportBusiness {
-    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(config, encoded).await?;
-        Ok(Self { client })
+    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(&config, encoded).await?;
+        Ok(Self { client, config })
     }
 
     pub async fn export(
@@ -30,6 +32,8 @@ impl VaultExportBusiness {
             .export_data(mount, root_path)
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
+        let result = serde_json::to_string_pretty(&result)?;
+        let result = EncryptedSecret::encrypt(result, &self.config.encryption_passphrase)?;
 
         let extension = match output_format {
             FormatArgs::Json => "json",
