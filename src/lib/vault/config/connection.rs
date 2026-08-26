@@ -4,6 +4,7 @@ use crate::secret::Secret;
 
 #[derive(Deserialize)]
 pub struct VaultConnectionConfig {
+    pub address: String,
     pub mode: VaultConnectionModeConfig,
 }
 
@@ -35,6 +36,7 @@ mod tests {
     fn test_deserialize_vault_connection_config_token() {
         let json = r#"
         {
+            "address": "http://127.0.0.1:8200",
             "mode": {
                 "token": "changeme"
             }
@@ -54,6 +56,7 @@ mod tests {
     fn test_deserialize_vault_config_username_password() {
         let json = r#"
         {
+            "address": "http://127.0.0.1:8200",
             "mode": {
                 "username": "admin",
                 "password": "changeme"
@@ -69,6 +72,18 @@ mod tests {
             }
             _ => panic!("Expected UserPass variant"),
         }
+    }
+
+    #[test]
+    fn test_deserialize_vault_config_token_missing_field() {
+        let json = r#"
+        {
+            "address: "http://127.0.0.1:8200",
+        }
+        "#;
+
+        let result = serde_json::from_str::<VaultGeneralConfig>(json);
+        assert!(result.is_err());
     }
 
     #[test]
