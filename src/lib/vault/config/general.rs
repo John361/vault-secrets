@@ -1,4 +1,5 @@
 use serde::Deserialize;
+
 use crate::secret::Secret;
 
 #[derive(Deserialize)]
@@ -15,7 +16,6 @@ pub struct VaultConfig {
 mod tests {
     use super::*;
     use std::ops::Deref;
-    use crate::vault::{VaultExportConfig, VaultFindConfig, VaultImportConfig};
 
     #[test]
     fn test_deserialize_vault_config_json() {
@@ -38,45 +38,6 @@ mod tests {
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
         assert_eq!(config.request_interval_ms, 200);
         assert_eq!(config.encryption_passphrase.deref(), "my_secret_passphrase");
-    }
-
-    #[test]
-    fn test_deserialize_vault_find_config_json() {
-        let json = r#"
-        {
-            "mount": "my-path"
-        }
-        "#;
-
-        let config: VaultFindConfig = serde_json::from_str(json).unwrap();
-
-        assert_eq!(config.mount, "my-path");
-    }
-
-    #[test]
-    fn test_deserialize_vault_export_config_json() {
-        let json = r#"
-        {
-            "mounts": ["my-path-1", "my-path-2"]
-        }
-        "#;
-
-        let config: VaultExportConfig = serde_json::from_str(json).unwrap();
-
-        assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
-    }
-
-    #[test]
-    fn test_deserialize_vault_import_config_json() {
-        let json = r#"
-        {
-            "mounts": ["my-path-1", "my-path-2"]
-        }
-        "#;
-
-        let config: VaultImportConfig = serde_json::from_str(json).unwrap();
-
-        assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
     }
 
     #[test]
@@ -148,42 +109,6 @@ mod tests {
         "#;
 
         let result = serde_json::from_str::<VaultConfig>(json);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_deserialize_vault_find_config_missing_field() {
-        let json = r#"
-        {
-
-        }
-        "#;
-
-        let result = serde_json::from_str::<VaultFindConfig>(json);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_deserialize_vault_export_config_missing_field() {
-        let json = r#"
-        {
-
-        }
-        "#;
-
-        let result = serde_json::from_str::<VaultExportConfig>(json);
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_deserialize_vault_import_config_missing_field() {
-        let json = r#"
-        {
-
-        }
-        "#;
-
-        let result = serde_json::from_str::<VaultImportConfig>(json);
         assert!(result.is_err());
     }
 }
