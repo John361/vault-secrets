@@ -4,17 +4,17 @@ use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
 use crate::secret::EncryptedSecret;
-use crate::vault::VaultConfig;
+use crate::vault::VaultGeneralConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
 
 pub struct VaultExportBusiness {
     client: VaultClient,
-    config: VaultConfig,
+    config: VaultGeneralConfig,
 }
 
 impl VaultExportBusiness {
-    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+    pub async fn new(config: VaultGeneralConfig, encoded: bool) -> Result<Self> {
         let client = VaultClient::new(&config, encoded).await?;
         Ok(Self { client, config })
     }

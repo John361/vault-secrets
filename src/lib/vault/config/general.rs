@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::secret::Secret;
 
 #[derive(Deserialize)]
-pub struct VaultConfig {
+pub struct VaultGeneralConfig {
     pub address: String,
     pub username: Option<String>,
     pub password: Option<Secret>,
@@ -30,7 +30,7 @@ mod tests {
         }
         "#;
 
-        let config: VaultConfig = serde_json::from_str(json).unwrap();
+        let config: VaultGeneralConfig = serde_json::from_str(json).unwrap();
 
         assert_eq!(config.address, "http://localhost:8200");
         assert_eq!(config.username, Some("admin".to_string()));
@@ -48,7 +48,7 @@ mod tests {
         }
         "#;
 
-        let result = serde_json::from_str::<VaultConfig>(json);
+        let result = serde_json::from_str::<VaultGeneralConfig>(json);
         assert!(result.is_err());
     }
 }

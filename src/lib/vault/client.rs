@@ -12,7 +12,7 @@ use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
-use crate::vault::VaultConfig;
+use crate::vault::VaultGeneralConfig;
 use crate::vault::model::VaultData;
 
 pub struct VaultClient {
@@ -22,7 +22,7 @@ pub struct VaultClient {
 }
 
 impl VaultClient {
-    pub async fn new(config: &VaultConfig, encode: bool) -> Result<Self> {
+    pub async fn new(config: &VaultGeneralConfig, encode: bool) -> Result<Self> {
         let client_builder = if let Some(token) = config.token.clone() {
             VaultClientSettingsBuilder::default()
                 .address(config.address.clone())

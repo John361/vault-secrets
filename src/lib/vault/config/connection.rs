@@ -29,7 +29,7 @@ pub struct VaultConnectionUserPassConfig {
 mod tests {
     use super::*;
     use std::ops::Deref;
-    use crate::vault::VaultConfig;
+    use crate::vault::VaultGeneralConfig;
 
     #[test]
     fn test_deserialize_vault_connection_config_token() {
@@ -81,7 +81,7 @@ mod tests {
         }
         "#;
 
-        let result = serde_json::from_str::<VaultConfig>(json);
+        let result = serde_json::from_str::<VaultGeneralConfig>(json);
         assert!(result.is_err());
     }
 
