@@ -73,7 +73,7 @@ impl EncryptedSecret {
         })
     }
 
-    pub fn decrypt(encrypted: &EncryptedSecret, passphrase: &str) -> Result<String> {
+    pub fn _decrypt(encrypted: &EncryptedSecret, passphrase: &str) -> Result<String> {
         let key = Self::derive_key(passphrase, &encrypted.salt);
         let key = Key::<Aes256Gcm>::from(key);
         let nonce = Nonce::from(encrypted.nonce);
@@ -142,7 +142,7 @@ mod tests {
         let password = "mon_mot_de_passe_123";
 
         let encrypted = EncryptedSecret::encrypt(secret.clone(), password).unwrap();
-        let decrypted = EncryptedSecret::decrypt(&encrypted, password).unwrap();
+        let decrypted = EncryptedSecret::_decrypt(&encrypted, password).unwrap();
 
         assert_eq!(secret, decrypted);
     }

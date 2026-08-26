@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
+use clap::Args;
 use clap::Parser;
-use clap::{Args, ValueEnum};
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
