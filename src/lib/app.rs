@@ -18,11 +18,11 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Export(args) => {
-            let business = VaultExportBusiness::new(&config.vault, !cli.clear_output).await?;
+            let business = VaultExportBusiness::new(config.vault, !cli.clear_output).await?;
 
             for mount in config.export.mounts {
                 business
-                    .export(&mount, &args.path, &args.output_folder, &args.output_format)
+                    .export(&mount, &args.path, &args.output_folder)
                     .await?;
             }
         }
@@ -31,9 +31,7 @@ pub async fn run() -> Result<()> {
             let business = VaultImportBusiness::new(&config.vault, !cli.clear_output).await?;
 
             for mount in config.import.mounts {
-                business
-                    .import(&mount, &args.input_folder, &args.input_format)
-                    .await?;
+                business.import(&mount, &args.input_folder).await?;
             }
         }
     }

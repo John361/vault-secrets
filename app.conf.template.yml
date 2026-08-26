@@ -8,12 +8,17 @@
 # Request interval information:
 # - Time between each request (for example when importing or exporting massive mounts paths)
 # - Used to avoid rate limiting issues
+#
+# Encryption passphrase
+# - Used only for export and import
+# - You can keep it empty for find
 vault:
   address: "http://127.0.0.1:8200"
   username: "vault-secrets"
   password: "changeme"
   token: "changeme"
   request_interval_ms: 200
+  encryption_passphrase: "changeme"
 
 find:
   mount: "vault-secrets-dev"

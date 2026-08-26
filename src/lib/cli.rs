@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
+use clap::Args;
 use clap::Parser;
-use clap::{Args, ValueEnum};
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
@@ -67,14 +67,6 @@ pub struct ExportArgs {
 
     #[arg(long, help = "Output folder path (required)", required = true)]
     pub output_folder: PathBuf,
-
-    #[arg(
-        long,
-        help = "Output format (optional, default: json)",
-        default_value_t = FormatArgs::Json,
-        value_enum
-    )]
-    pub output_format: FormatArgs,
 }
 
 #[derive(Args, Debug)]
@@ -85,21 +77,6 @@ pub struct ImportArgs {
 
     #[arg(long, help = "Input folder path (required)", required = true)]
     pub input_folder: PathBuf,
-
-    #[arg(
-        long,
-        help = "Input format (optional, default: json)",
-        default_value_t = FormatArgs::Json,
-        value_enum
-    )]
-    pub input_format: FormatArgs,
-}
-
-#[derive(Clone, Debug, Default, PartialEq, ValueEnum)]
-pub enum FormatArgs {
-    #[default]
-    Json,
-    Yaml,
 }
 
 #[cfg(test)]
@@ -148,7 +125,6 @@ mod tests {
         if let Commands::Export(args) = &cli.command {
             assert_eq!(args.path, "secret");
             assert_eq!(args.output_folder, PathBuf::from("./tests"));
-            assert_eq!(args.output_format, FormatArgs::Json);
         }
     }
 
@@ -171,7 +147,6 @@ mod tests {
         if let Commands::Import(args) = &cli.command {
             assert_eq!(args.path, "secret");
             assert_eq!(args.input_folder, PathBuf::from("./tests"));
-            assert_eq!(args.input_format, FormatArgs::Json);
         }
     }
 
@@ -262,8 +237,6 @@ mod tests {
             "secret",
             "--output-folder",
             "./tests",
-            "--output-format",
-            "yaml",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -273,7 +246,6 @@ mod tests {
         if let Commands::Export(args) = cli.command {
             assert_eq!(args.path, "secret");
             assert_eq!(args.output_folder, PathBuf::from("./tests"));
-            assert_eq!(args.output_format, FormatArgs::Yaml);
         }
     }
 
@@ -289,8 +261,6 @@ mod tests {
             "secret",
             "--input-folder",
             "./tests",
-            "--input-format",
-            "yaml",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
@@ -300,7 +270,6 @@ mod tests {
         if let Commands::Import(args) = cli.command {
             assert_eq!(args.path, "secret");
             assert_eq!(args.input_folder, PathBuf::from("./tests"));
-            assert_eq!(args.input_format, FormatArgs::Yaml);
         }
     }
 }

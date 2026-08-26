@@ -9,6 +9,7 @@ pub struct VaultConfig {
     pub password: Option<Secret>,
     pub token: Option<Secret>,
     pub request_interval_ms: u64,
+    pub encryption_passphrase: Secret,
 }
 
 #[derive(Deserialize)]
@@ -39,7 +40,8 @@ mod tests {
             "username": "admin",
             "password": "my_secret_password",
             "token": "my_secret_token",
-            "request_interval_ms": 200
+            "request_interval_ms": 200,
+            "encryption_passphrase": "my_secret_passphrase"
         }
         "#;
 
@@ -50,6 +52,7 @@ mod tests {
         assert_eq!(config.password.unwrap().deref(), "my_secret_password");
         assert_eq!(config.token.unwrap().deref(), "my_secret_token");
         assert_eq!(config.request_interval_ms, 200);
+        assert_eq!(config.encryption_passphrase.deref(), "my_secret_passphrase");
     }
 
     #[test]
@@ -98,7 +101,8 @@ mod tests {
             "address": "http://localhost:8200",
             "username": "admin",
             "password": "changeme",
-            "request_interval_ms": 200
+            "request_interval_ms": 200,
+            "encryption_passphrase": "my_secret_passphrase"
         }
         "#;
 
@@ -112,7 +116,8 @@ mod tests {
         {
             "address": "http://localhost:8200",
             "token": "changeme",
-            "request_interval_ms": 200
+            "request_interval_ms": 200,
+            "encryption_passphrase": "my_secret_passphrase"
         }
         "#;
 
@@ -129,6 +134,7 @@ mod tests {
             password: Some(Secret::new("top_secret".to_string())),
             token: None,
             request_interval_ms: 200,
+            encryption_passphrase: Secret::new("my_secret_passphrase".to_string()),
         };
 
         assert_eq!(config.password.unwrap().deref(), "top_secret");
@@ -142,6 +148,7 @@ mod tests {
             password: None,
             token: Some(Secret::new("top_secret".to_string())),
             request_interval_ms: 200,
+            encryption_passphrase: Secret::new("my_secret_passphrase".to_string()),
         };
 
         assert_eq!(config.token.unwrap().deref(), "top_secret");

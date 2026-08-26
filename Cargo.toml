@@ -18,13 +18,17 @@ name = "lib_vault_secrets"
 path = "src/lib/lib.rs"
 
 [dependencies]
+aes-gcm            = "0.11.1"
 anyhow             = "1.0.104"
 base64             = "0.23.1"
 clap               = { version = "4.6.6", features = ["derive", "env"] }
 config             = { version = "0.15.25", features = ["yaml"] }
+pbkdf2             = "0.13.0"
 tokio              = { version = "1.53.1", features = ["macros", "rt", "rt-multi-thread", "time"] }
+rand               = "0.10.2"
 serde              = { version = "1.0.229", features = ["std", "derive"] }
 serde_json         = "1.0.151"
+sha2               = "0.11.0"
 tracing            = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 vaultrs            = "0.8.0"

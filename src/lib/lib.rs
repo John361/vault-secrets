@@ -5,3 +5,5 @@ mod cli;
 mod config;
 mod secret;
 mod vault;
+
+static FILE_EXTENSION: &str = ".vs";
