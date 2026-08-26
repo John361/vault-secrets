@@ -28,7 +28,7 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Import(args) => {
-            let business = VaultImportBusiness::new(&config.vault, !cli.clear_output).await?;
+            let business = VaultImportBusiness::new(config.vault, !cli.clear_output).await?;
 
             for mount in config.import.mounts {
                 business.import(&mount, &args.input_folder).await?;
