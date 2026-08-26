@@ -31,9 +31,7 @@ pub async fn run() -> Result<()> {
             let business = VaultImportBusiness::new(&config.vault, !cli.clear_output).await?;
 
             for mount in config.import.mounts {
-                business
-                    .import(&mount, &args.input_folder, &args.input_format)
-                    .await?;
+                business.import(&mount, &args.input_folder).await?;
             }
         }
     }
