@@ -4,18 +4,20 @@ use std::path::Path;
 use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
+use crate::secret::EncryptedSecret;
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
 
 pub struct VaultImportBusiness {
     client: VaultClient,
+    config: VaultConfig,
 }
 
 impl VaultImportBusiness {
-    pub async fn new(config: &VaultConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(config, encoded).await?;
-        Ok(Self { client })
+    pub async fn new(config: VaultConfig, encoded: bool) -> Result<Self> {
+        let client = VaultClient::new(&config, encoded).await?;
+        Ok(Self { client, config })
     }
 
     pub async fn import(&self, mount: &str, input_folder: &Path) -> Result<()> {
@@ -29,8 +31,12 @@ impl VaultImportBusiness {
             .read_to_string(&mut file_content)
             .with_context(|| format!("Failed to read file content: {file_path:?}"))?;
 
-        let data = serde_json::from_str(&file_content)
+        let file_content: EncryptedSecret = serde_json::from_str(&file_content)
             .with_context(|| format!("Failed to parse json content: {file_path:?}"))?;
+        let file_content =
+            EncryptedSecret::decrypt(&file_content, &self.config.encryption_passphrase)?;
+        let data = serde_json::from_str(&file_content)?;
+
         self.import_data(mount, data).await
     }
 
