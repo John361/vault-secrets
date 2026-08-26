@@ -61,8 +61,8 @@ impl EncryptedSecret {
         rand::fill(&mut nonce);
 
         let key = Self::derive_key(passphrase, &salt);
-        let key = Key::<Aes256Gcm>::try_from(key)?;
-        let nonce = Nonce::try_from(nonce)?;
+        let key = Key::<Aes256Gcm>::from(key);
+        let nonce = Nonce::from(nonce);
         let cipher = Aes256Gcm::new(&key);
         let ciphertext = cipher.encrypt(&nonce, secret.as_bytes())?;
 
@@ -75,8 +75,8 @@ impl EncryptedSecret {
 
     pub fn decrypt(encrypted: &EncryptedSecret, passphrase: &str) -> Result<String> {
         let key = Self::derive_key(passphrase, &encrypted.salt);
-        let key = Key::<Aes256Gcm>::try_from(key)?;
-        let nonce = Nonce::try_from(encrypted.nonce)?;
+        let key = Key::<Aes256Gcm>::from(key);
+        let nonce = Nonce::from(encrypted.nonce);
         let cipher = Aes256Gcm::new(&key);
         let plaintext = cipher.decrypt(&nonce, encrypted.ciphertext.as_ref())?;
 

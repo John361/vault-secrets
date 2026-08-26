@@ -2,7 +2,6 @@ use std::path::PathBuf;
 
 use anyhow::{Context, Result};
 
-use crate::cli::FormatArgs;
 use crate::FILE_EXTENSION;
 use crate::secret::EncryptedSecret;
 use crate::vault::VaultConfig;
@@ -25,7 +24,6 @@ impl VaultExportBusiness {
         mount: &str,
         root_path: &str,
         output_folder: &PathBuf,
-        output_format: &FormatArgs,
     ) -> Result<()> {
         self.check_folder(output_folder)?;
 
