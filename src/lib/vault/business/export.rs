@@ -3,6 +3,7 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use crate::cli::FormatArgs;
+use crate::FILE_EXTENSION;
 use crate::secret::EncryptedSecret;
 use crate::vault::VaultConfig;
 use crate::vault::client::VaultClient;
@@ -35,26 +36,12 @@ impl VaultExportBusiness {
         let result = serde_json::to_string_pretty(&result)?;
         let result = EncryptedSecret::encrypt(result, &self.config.encryption_passphrase)?;
 
-        let extension = match output_format {
-            FormatArgs::Json => "json",
-            FormatArgs::Yaml => "yaml",
-        };
-
-        let file_path = output_folder.join(format!("{mount}.{extension}"));
+        let file_path = output_folder.join(format!("{mount}{FILE_EXTENSION}"));
         let file = std::fs::File::create(&file_path)
             .with_context(|| format!("Failed to create file: {file_path:?}"))?;
 
-        match output_format {
-            FormatArgs::Json => {
-                serde_json::to_writer_pretty(file, &result)
-                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
-            }
-
-            FormatArgs::Yaml => {
-                yaml_serde::to_writer(&file, &result)
-                    .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
-            }
-        }
+        serde_json::to_writer_pretty(file, &result)
+            .with_context(|| format!("Failed to write to file: {file_path:?}"))?;
 
         tracing::debug!("Exported secrets written in file");
         Ok(())
