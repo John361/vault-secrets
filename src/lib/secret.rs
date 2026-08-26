@@ -1,7 +1,12 @@
 use std::fmt;
 use std::ops::Deref;
 
+use aes_gcm::{Aes256Gcm, Key, KeyInit, Nonce};
+use aes_gcm::aead::Aead;
+use anyhow::Result;
+use pbkdf2::pbkdf2_hmac;
 use serde::{Deserialize, Serialize};
+use sha2::Sha256;
 use zeroize::Zeroizing;
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -31,6 +36,51 @@ impl Deref for Secret {
 impl From<String> for Secret {
     fn from(s: String) -> Self {
         Self::new(s)
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct EncryptedSecret {
+    pub ciphertext: Vec<u8>,
+    pub nonce: [u8; 12],
+    pub salt: [u8; 32],
+}
+
+impl EncryptedSecret {
+    fn derive_key(password: &str, salt: &[u8; 32]) -> [u8; 32] {
+        let mut key = [0u8; 32];
+        pbkdf2_hmac::<Sha256>(password.as_bytes(), salt, 100_000, &mut key);
+        key
+    }
+
+    pub fn encrypt(secret: &str, password: &str) -> Result<EncryptedSecret> {
+        let mut salt = [0u8; 32];
+        rand::fill(&mut salt);
+
+        let mut nonce = [0u8; 12];
+        rand::fill(&mut nonce);
+
+        let key = Self::derive_key(password, &salt);
+        let key = Key::<Aes256Gcm>::try_from(key)?;
+        let nonce = Nonce::try_from(nonce)?;
+        let cipher = Aes256Gcm::new(&key);
+        let ciphertext = cipher.encrypt(&nonce, secret.as_bytes())?;
+
+        Ok(EncryptedSecret {
+            ciphertext,
+            nonce: nonce.into(),
+            salt,
+        })
+    }
+
+    pub fn decrypt(encrypted: &EncryptedSecret, password: &str) -> Result<String> {
+        let key = Self::derive_key(password, &encrypted.salt);
+        let key = Key::<Aes256Gcm>::try_from(key)?;
+        let nonce = Nonce::try_from(encrypted.nonce)?;
+        let cipher = Aes256Gcm::new(&key);
+        let plaintext = cipher.decrypt(&nonce, encrypted.ciphertext.as_ref())?;
+
+        Ok(String::from_utf8(plaintext)?)
     }
 }
 
@@ -84,5 +134,16 @@ mod tests {
         let json = serde_json::to_value(&secret).unwrap();
 
         assert_eq!(&json, "my_secret_value");
+    }
+
+    #[test]
+    fn test_encryption_and_decryption() {
+        let secret = "mon_secret_vault";
+        let password = "mon_mot_de_passe_123";
+
+        let encrypted = EncryptedSecret::encrypt(secret, password).unwrap();
+        let decrypted = EncryptedSecret::decrypt(&encrypted, password).unwrap();
+
+        assert_eq!(secret, decrypted);
     }
 }
