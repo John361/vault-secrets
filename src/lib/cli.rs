@@ -15,12 +15,6 @@ pub struct Cli {
         help = "Path to config file (required)"
     )]
     pub config: String,
-
-    #[arg(
-        long = "clear-output",
-        help = "Encode output data (optional, default: false)"
-    )]
-    pub clear_output: bool,
 }
 
 impl Cli {
@@ -217,7 +211,6 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
-        assert!(!cli.clear_output);
 
         if let Commands::Find(args) = cli.command {
             assert_eq!(args.path, "secret/data/mysql");
@@ -229,7 +222,6 @@ mod tests {
     fn test_cli_load_export_uses_parse() {
         let args = vec![
             "vault-secrets",
-            "--clear-output",
             "--config",
             "/tmp/config.yaml",
             "export",
@@ -241,7 +233,6 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
-        assert!(cli.clear_output);
 
         if let Commands::Export(args) = cli.command {
             assert_eq!(args.path, "secret");
@@ -253,7 +244,6 @@ mod tests {
     fn test_cli_load_import_uses_parse() {
         let args = vec![
             "vault-secrets",
-            "--clear-output",
             "--config",
             "/tmp/config.yaml",
             "import",
@@ -265,7 +255,6 @@ mod tests {
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
-        assert!(cli.clear_output);
 
         if let Commands::Import(args) = cli.command {
             assert_eq!(args.path, "secret");
