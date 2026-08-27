@@ -9,7 +9,7 @@ version      = "0.3.0"
 edition      = "2024"
 categories   = ["command-line-utilities", "security"]
 exclude      = [
-    ".github/**.*",
+    ".github/**/*",
     "ops/**/*",
     "sonar-project.properties",
     "vault-secrets.gpg"
