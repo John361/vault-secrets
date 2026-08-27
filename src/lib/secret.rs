@@ -41,7 +41,7 @@ impl From<String> for Secret {
 
 #[derive(Serialize, Deserialize)]
 pub struct EncryptedSecret {
-    pub ciphertext: Vec<u8>, // TODO: should be secret
+    pub ciphertext: Vec<u8>,
     pub nonce: [u8; 12],
     pub salt: [u8; 32],
 }
