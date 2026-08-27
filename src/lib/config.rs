@@ -1,18 +1,17 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::vault::{
-    VaultConnectionConfig, VaultExportConfig, VaultFindConfig, VaultGeneralConfig,
-    VaultImportConfig,
-};
+use crate::secret::Secret;
+use crate::vault::{VaultConnectionConfig, VaultExportConfig, VaultFindConfig, VaultImportConfig};
 
 #[derive(Deserialize)]
 pub struct AppConfig {
     pub connection: VaultConnectionConfig,
-    pub vault: VaultGeneralConfig,
     pub find: VaultFindConfig,
     pub export: VaultExportConfig,
     pub import: VaultImportConfig,
+    pub request_interval_ms: u64,
+    pub encryption_passphrase: Secret,
 }
 
 impl AppConfig {
@@ -33,6 +32,7 @@ impl AppConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vault::VaultConnectionModeConfig;
     use std::io::Write;
     use std::ops::Deref;
     use std::panic;
@@ -48,12 +48,11 @@ mod tests {
     #[test]
     fn test_load_success_login_password() {
         let config_content = r#"
-        vault:
+        connection:
           address: "http://localhost:8200"
-          username: "user"
-          password: "pass"
-          request_interval_ms: 200
-          encryption_passphrase: "passphrase"
+          mode:
+              username: "admin"
+              password: "changeme"
         find:
           mount: "secret"
         export:
@@ -64,6 +63,8 @@ mod tests {
           mounts:
             - "secret"
             - "secret-2"
+        request_interval_ms: 200
+        encryption_passphrase: "changeme"
     "#;
 
         let temp_file = NamedTempFile::new().unwrap();
@@ -75,21 +76,26 @@ mod tests {
         assert!(result.is_ok());
 
         let config = result.unwrap();
-        assert_eq!(config.vault.address, "http://localhost:8200");
-        assert_eq!(config.vault.username.unwrap(), "user");
-        assert_eq!(config.vault.password.unwrap().deref(), "pass");
-        assert_eq!(config.vault.request_interval_ms, 200);
-        assert_eq!(config.vault.encryption_passphrase.deref(), "passphrase");
+        assert_eq!(config.connection.address, "http://localhost:8200");
+        assert_eq!(config.request_interval_ms, 200);
+        assert_eq!(config.encryption_passphrase.deref(), "changeme");
+
+        match config.connection.mode {
+            VaultConnectionModeConfig::UserPass(auth) => {
+                assert_eq!(auth.username, "admin");
+                assert_eq!(auth.password.deref(), "changeme");
+            }
+            _ => panic!("Expected UserPass variant"),
+        }
     }
 
     #[test]
     fn test_load_success_token() {
         let config_content = r#"
-        vault:
+        connection:
           address: "http://localhost:8200"
-          token: "token"
-          request_interval_ms: 200
-          encryption_passphrase: "passphrase"
+          mode:
+            token: "changeme"
         find:
           mount: "secret"
         export:
@@ -100,6 +106,8 @@ mod tests {
           mounts:
             - "secret"
             - "secret-2"
+        request_interval_ms: 200
+        encryption_passphrase: "changeme"
     "#;
 
         let temp_file = NamedTempFile::new().unwrap();
@@ -111,10 +119,16 @@ mod tests {
         assert!(result.is_ok());
 
         let config = result.unwrap();
-        assert_eq!(config.vault.address, "http://localhost:8200");
-        assert_eq!(config.vault.token.unwrap().deref(), "token");
-        assert_eq!(config.vault.request_interval_ms, 200);
-        assert_eq!(config.vault.encryption_passphrase.deref(), "passphrase");
+        assert_eq!(config.connection.address, "http://localhost:8200");
+        assert_eq!(config.request_interval_ms, 200);
+        assert_eq!(config.encryption_passphrase.deref(), "changeme");
+
+        match config.connection.mode {
+            VaultConnectionModeConfig::Token(auth) => {
+                assert_eq!(auth.token.deref(), "changeme");
+            }
+            _ => panic!("Expected Token variant"),
+        }
     }
 
     #[test]
@@ -128,9 +142,10 @@ mod tests {
     #[test]
     fn test_load_deserialize_error_panics() {
         let config_content = r#"
-        vault:
-          username: "user"
-          password: "pass"
+        connection:
+          mode:
+            username: "admin"
+            password: "changeme"
     "#;
         let temp_file = write_temp_config(config_content);
         let path = temp_file.path().to_str().unwrap();

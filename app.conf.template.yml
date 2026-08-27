@@ -12,15 +12,12 @@
 # - Used only for export and import
 # - You can keep it empty for find
 connection:
-  token: "changeme"
-  userpass:
-    username: "vault-secrets"
-    password: "changeme"
-
-vault:
   address: "http://127.0.0.1:8200"
-  request_interval_ms: 200
-  encryption_passphrase: "changeme"
+  mode:
+    token: "changeme"
+    userpass:
+      username: "vault-secrets"
+      password: "changeme"
 
 find:
   mount: "vault-secrets-dev"
@@ -32,3 +29,6 @@ export:
 import:
   mounts:
     - "vault-secrets-tests"
+
+request_interval_ms: 200
+encryption_passphrase: "changeme"

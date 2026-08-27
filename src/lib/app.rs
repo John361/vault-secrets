@@ -10,8 +10,12 @@ pub async fn run() -> Result<()> {
 
     match cli.command {
         Commands::Find(args) => {
-            let business =
-                VaultFindBusiness::new(config.vault, config.connection, !cli.clear_output).await?;
+            let business = VaultFindBusiness::new(
+                config.connection,
+                !cli.clear_output,
+                config.request_interval_ms,
+            )
+            .await?;
             let result = business
                 .find(&config.find.mount, &args.path, &args.key)
                 .await?;
@@ -19,24 +23,39 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Export(args) => {
-            let business =
-                VaultExportBusiness::new(config.vault, config.connection, !cli.clear_output)
-                    .await?;
+            let business = VaultExportBusiness::new(
+                config.connection,
+                !cli.clear_output,
+                config.request_interval_ms,
+            )
+            .await?;
+            let encryption_passphrase = config.encryption_passphrase;
 
             for mount in config.export.mounts {
                 business
-                    .export(&mount, &args.path, &args.output_folder)
+                    .export(
+                        &mount,
+                        &args.path,
+                        &args.output_folder,
+                        encryption_passphrase.clone(),
+                    )
                     .await?;
             }
         }
 
         Commands::Import(args) => {
-            let business =
-                VaultImportBusiness::new(config.vault, config.connection, !cli.clear_output)
-                    .await?;
+            let business = VaultImportBusiness::new(
+                config.connection,
+                !cli.clear_output,
+                config.request_interval_ms,
+            )
+            .await?;
+            let encryption_passphrase = config.encryption_passphrase;
 
             for mount in config.import.mounts {
-                business.import(&mount, &args.input_folder).await?;
+                business
+                    .import(&mount, &args.input_folder, encryption_passphrase.clone())
+                    .await?;
             }
         }
     }

@@ -3,27 +3,23 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
-use crate::secret::EncryptedSecret;
+use crate::secret::{EncryptedSecret, Secret};
+use crate::vault::VaultConnectionConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
-use crate::vault::{VaultConnectionConfig, VaultGeneralConfig};
 
 pub struct VaultExportBusiness {
     client: VaultClient,
-    config: VaultGeneralConfig,
 }
 
 impl VaultExportBusiness {
     pub async fn new(
-        general: VaultGeneralConfig,
         connection: VaultConnectionConfig,
         encoded: bool,
+        request_interval_ms: u64,
     ) -> Result<Self> {
-        let client = VaultClient::new(connection, encoded, general.request_interval_ms).await?;
-        Ok(Self {
-            client,
-            config: general,
-        })
+        let client = VaultClient::new(connection, encoded, request_interval_ms).await?;
+        Ok(Self { client })
     }
 
     pub async fn export(
@@ -31,6 +27,7 @@ impl VaultExportBusiness {
         mount: &str,
         root_path: &str,
         output_folder: &PathBuf,
+        encryption_passphrase: Secret,
     ) -> Result<()> {
         self.check_folder(output_folder)?;
 
@@ -39,7 +36,7 @@ impl VaultExportBusiness {
             .await
             .inspect(|_| tracing::debug!("Secrets from {root_path} exported"))?;
         let result = serde_json::to_string_pretty(&result)?;
-        let result = EncryptedSecret::encrypt(result, &self.config.encryption_passphrase)?;
+        let result = EncryptedSecret::encrypt(result, encryption_passphrase)?;
 
         let file_path = output_folder.join(format!("{mount}{FILE_EXTENSION}"));
         let file = std::fs::File::create(&file_path)

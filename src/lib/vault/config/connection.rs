@@ -29,7 +29,6 @@ pub struct VaultConnectionUserPassConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vault::VaultGeneralConfig;
     use std::ops::Deref;
 
     #[test]
@@ -82,7 +81,7 @@ mod tests {
         }
         "#;
 
-        let result = serde_json::from_str::<VaultGeneralConfig>(json);
+        let result = serde_json::from_str::<VaultConnectionConfig>(json);
         assert!(result.is_err());
     }
 
@@ -90,13 +89,14 @@ mod tests {
     fn test_deserialize_vault_config_username_password_missing_field() {
         let json = r#"
         {
+            "address: "http://127.0.0.1:8200",
             "mode": {
                 "username": "admin"
             }
         }
         "#;
 
-        let result = serde_json::from_str::<VaultGeneralConfig>(json);
+        let result = serde_json::from_str::<VaultConnectionConfig>(json);
         assert!(result.is_err());
     }
 
