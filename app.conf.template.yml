@@ -1,6 +1,5 @@
 # Connection information:
-# - You can connect using username / password or with token
-# - By default, username / password is used unless you specify only token
+# - Either use token or username / password
 #
 # Mount information:
 # - On import command, if the mount paths do not exist, make sure you have enough permissions to create them
@@ -12,13 +11,13 @@
 # Encryption passphrase
 # - Used only for export and import
 # - You can keep it empty for find
-vault:
+connection:
   address: "http://127.0.0.1:8200"
-  username: "vault-secrets"
-  password: "changeme"
-  token: "changeme"
-  request_interval_ms: 200
-  encryption_passphrase: "changeme"
+  mode:
+    token: "changeme"
+    userpass:
+      username: "vault-secrets"
+      password: "changeme"
 
 find:
   mount: "vault-secrets-dev"
@@ -30,3 +29,6 @@ export:
 import:
   mounts:
     - "vault-secrets-tests"
+
+request_interval_ms: 200
+encryption_passphrase: "changeme"

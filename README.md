@@ -185,7 +185,7 @@ vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --
 vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
 
 # YAML clear export
-vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER> --output-format yaml
+vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER>
 ```
 
 ### :inbox_tray: Import secrets
@@ -194,7 +194,7 @@ vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --outpu
 vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
 
 # YAML clear import
-vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input-folder <OUTPUT_FOLDER> --input-format yaml
+vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input-folder <OUTPUT_FOLDER>
 ```
 
 ### :bulb: Example
@@ -202,10 +202,10 @@ vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
 # Output: base64-encoded secret
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-folder "./tests" --output-format yaml
+vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-folder "./tests"
 # Output: in file
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output input --path "" --input-folder "./tests" --input-format yaml
+vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output input --path "" --input-folder "./tests"
 # Output: in your instance
 ```
 

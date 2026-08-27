@@ -53,14 +53,14 @@ impl EncryptedSecret {
         key
     }
 
-    pub fn encrypt(secret: String, passphrase: &str) -> Result<EncryptedSecret> {
+    pub fn encrypt(secret: String, passphrase: Secret) -> Result<EncryptedSecret> {
         let mut salt = [0u8; 32];
         rand::fill(&mut salt);
 
         let mut nonce = [0u8; 12];
         rand::fill(&mut nonce);
 
-        let key = Self::derive_key(passphrase, &salt);
+        let key = Self::derive_key(passphrase.deref(), &salt);
         let key = Key::<Aes256Gcm>::from(key);
         let nonce = Nonce::from(nonce);
         let cipher = Aes256Gcm::new(&key);
@@ -73,14 +73,15 @@ impl EncryptedSecret {
         })
     }
 
-    pub fn decrypt(encrypted: &EncryptedSecret, passphrase: &str) -> Result<String> {
-        let key = Self::derive_key(passphrase, &encrypted.salt);
+    pub fn decrypt(encrypted: &EncryptedSecret, passphrase: Secret) -> Result<Secret> {
+        let key = Self::derive_key(passphrase.deref(), &encrypted.salt);
         let key = Key::<Aes256Gcm>::from(key);
         let nonce = Nonce::from(encrypted.nonce);
         let cipher = Aes256Gcm::new(&key);
         let plaintext = cipher.decrypt(&nonce, encrypted.ciphertext.as_ref())?;
+        let plaintext = String::from_utf8(plaintext)?;
 
-        Ok(String::from_utf8(plaintext)?)
+        Ok(Secret::new(plaintext))
     }
 }
 
@@ -139,11 +140,11 @@ mod tests {
     #[test]
     fn test_encryption_and_decryption() {
         let secret = "mon_secret_vault".to_string();
-        let password = "mon_mot_de_passe_123";
+        let password = Secret::new("mon_mot_de_passe_123".to_string());
 
-        let encrypted = EncryptedSecret::encrypt(secret.clone(), password).unwrap();
+        let encrypted = EncryptedSecret::encrypt(secret.clone(), password.clone()).unwrap();
         let decrypted = EncryptedSecret::decrypt(&encrypted, password).unwrap();
 
-        assert_eq!(secret, decrypted);
+        assert_eq!(secret, decrypted.deref());
     }
 }

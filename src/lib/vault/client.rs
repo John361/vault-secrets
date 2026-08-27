@@ -12,8 +12,8 @@ use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
-use crate::vault::VaultConfig;
 use crate::vault::model::VaultData;
+use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
 pub struct VaultClient {
     client: vaultrs::client::VaultClient,
@@ -22,29 +22,31 @@ pub struct VaultClient {
 }
 
 impl VaultClient {
-    pub async fn new(config: &VaultConfig, encode: bool) -> Result<Self> {
-        let client_builder = if let Some(token) = config.token.clone() {
-            VaultClientSettingsBuilder::default()
-                .address(config.address.clone())
-                .token(token.deref().to_string())
+    pub async fn new(
+        connection: VaultConnectionConfig,
+        encode: bool,
+        request_interval_ms: u64,
+    ) -> Result<Self> {
+        let client_builder = match &connection.mode {
+            VaultConnectionModeConfig::Token(value) => VaultClientSettingsBuilder::default()
+                .address(connection.address.clone())
+                .token(value.token.deref().to_string())
                 .build()
-                .with_context(|| "Failed to build Vault settings")?
-        } else {
-            VaultClientSettingsBuilder::default()
-                .address(config.address.clone())
+                .with_context(|| "Failed to build Vault settings")?,
+
+            VaultConnectionModeConfig::UserPass(_) => VaultClientSettingsBuilder::default()
+                .address(connection.address.clone())
                 .build()
-                .with_context(|| "Failed to build Vault settings")?
+                .with_context(|| "Failed to build Vault settings")?,
         };
 
         let mut client = vaultrs::client::VaultClient::new(client_builder)
             .with_context(|| "Failed to create Vault client")?;
 
-        if let Some(username) = config.username.clone()
-            && let Some(password) = config.password.clone()
-        {
+        if let VaultConnectionModeConfig::UserPass(value) = connection.mode {
             let login = UserpassLogin {
-                username,
-                password: password.deref().to_string(),
+                username: value.username,
+                password: value.password.deref().to_string(),
             };
 
             client
@@ -57,7 +59,7 @@ impl VaultClient {
         Ok(Self {
             client,
             encode,
-            request_interval_ms: config.request_interval_ms,
+            request_interval_ms,
         })
     }
 
