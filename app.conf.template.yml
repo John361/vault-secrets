@@ -21,6 +21,7 @@ connection:
 
 find:
   mount: "vault-secrets-dev"
+  encode: true
 
 export:
   mounts:

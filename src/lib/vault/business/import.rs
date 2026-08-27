@@ -14,12 +14,8 @@ pub struct VaultImportBusiness {
 }
 
 impl VaultImportBusiness {
-    pub async fn new(
-        connection: VaultConnectionConfig,
-        encoded: bool,
-        request_interval_ms: u64,
-    ) -> Result<Self> {
-        let client = VaultClient::new(connection, encoded, request_interval_ms).await?;
+    pub async fn new(connection: VaultConnectionConfig, request_interval_ms: u64) -> Result<Self> {
+        let client = VaultClient::new(connection, false, request_interval_ms).await?;
         Ok(Self { client })
     }
 

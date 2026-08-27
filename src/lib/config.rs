@@ -55,6 +55,7 @@ mod tests {
               password: "changeme"
         find:
           mount: "secret"
+          encode: true
         export:
           mounts:
             - "secret"
@@ -98,6 +99,7 @@ mod tests {
             token: "changeme"
         find:
           mount: "secret"
+          encode: true
         export:
           mounts:
             - "secret"

@@ -10,25 +10,16 @@ pub async fn run() -> Result<()> {
 
     match cli.command {
         Commands::Find(args) => {
-            let business = VaultFindBusiness::new(
-                config.connection,
-                !cli.clear_output,
-                config.request_interval_ms,
-            )
-            .await?;
-            let result = business
-                .find(&config.find.mount, &args.path, &args.key)
-                .await?;
+            let business =
+                VaultFindBusiness::new(config.connection, config.find, config.request_interval_ms)
+                    .await?;
+            let result = business.find(&args.path, &args.key).await?;
             println!("{result}");
         }
 
         Commands::Export(args) => {
-            let business = VaultExportBusiness::new(
-                config.connection,
-                !cli.clear_output,
-                config.request_interval_ms,
-            )
-            .await?;
+            let business =
+                VaultExportBusiness::new(config.connection, config.request_interval_ms).await?;
             let encryption_passphrase = config.encryption_passphrase;
 
             for mount in config.export.mounts {
@@ -44,12 +35,8 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Import(args) => {
-            let business = VaultImportBusiness::new(
-                config.connection,
-                !cli.clear_output,
-                config.request_interval_ms,
-            )
-            .await?;
+            let business =
+                VaultImportBusiness::new(config.connection, config.request_interval_ms).await?;
             let encryption_passphrase = config.encryption_passphrase;
 
             for mount in config.import.mounts {
