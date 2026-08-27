@@ -2,16 +2,20 @@ use std::ops::Deref;
 
 use anyhow::Result;
 
-use crate::vault::VaultGeneralConfig;
 use crate::vault::client::VaultClient;
+use crate::vault::{VaultConnectionConfig, VaultGeneralConfig};
 
 pub struct VaultFindBusiness {
     client: VaultClient,
 }
 
 impl VaultFindBusiness {
-    pub async fn new(config: &VaultGeneralConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(config, encoded).await?;
+    pub async fn new(
+        general: VaultGeneralConfig,
+        connection: VaultConnectionConfig,
+        encoded: bool,
+    ) -> Result<Self> {
+        let client = VaultClient::new(connection, encoded, general.request_interval_ms).await?;
         Ok(Self { client })
     }
 

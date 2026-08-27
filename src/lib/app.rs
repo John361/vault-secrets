@@ -10,7 +10,8 @@ pub async fn run() -> Result<()> {
 
     match cli.command {
         Commands::Find(args) => {
-            let business = VaultFindBusiness::new(&config.vault, !cli.clear_output).await?;
+            let business =
+                VaultFindBusiness::new(config.vault, config.connection, !cli.clear_output).await?;
             let result = business
                 .find(&config.find.mount, &args.path, &args.key)
                 .await?;
@@ -18,7 +19,9 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Export(args) => {
-            let business = VaultExportBusiness::new(config.vault, !cli.clear_output).await?;
+            let business =
+                VaultExportBusiness::new(config.vault, config.connection, !cli.clear_output)
+                    .await?;
 
             for mount in config.export.mounts {
                 business
@@ -28,7 +31,9 @@ pub async fn run() -> Result<()> {
         }
 
         Commands::Import(args) => {
-            let business = VaultImportBusiness::new(config.vault, !cli.clear_output).await?;
+            let business =
+                VaultImportBusiness::new(config.vault, config.connection, !cli.clear_output)
+                    .await?;
 
             for mount in config.import.mounts {
                 business.import(&mount, &args.input_folder).await?;

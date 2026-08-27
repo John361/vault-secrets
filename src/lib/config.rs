@@ -1,10 +1,14 @@
 use anyhow::Result;
 use serde::Deserialize;
 
-use crate::vault::{VaultGeneralConfig, VaultExportConfig, VaultFindConfig, VaultImportConfig};
+use crate::vault::{
+    VaultConnectionConfig, VaultExportConfig, VaultFindConfig, VaultGeneralConfig,
+    VaultImportConfig,
+};
 
 #[derive(Deserialize)]
 pub struct AppConfig {
+    pub connection: VaultConnectionConfig,
     pub vault: VaultGeneralConfig,
     pub find: VaultFindConfig,
     pub export: VaultExportConfig,

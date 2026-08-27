@@ -5,9 +5,9 @@ use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
 use crate::secret::EncryptedSecret;
-use crate::vault::VaultGeneralConfig;
 use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
+use crate::vault::{VaultConnectionConfig, VaultGeneralConfig};
 
 pub struct VaultImportBusiness {
     client: VaultClient,
@@ -15,9 +15,16 @@ pub struct VaultImportBusiness {
 }
 
 impl VaultImportBusiness {
-    pub async fn new(config: VaultGeneralConfig, encoded: bool) -> Result<Self> {
-        let client = VaultClient::new(&config, encoded).await?;
-        Ok(Self { client, config })
+    pub async fn new(
+        general: VaultGeneralConfig,
+        connection: VaultConnectionConfig,
+        encoded: bool,
+    ) -> Result<Self> {
+        let client = VaultClient::new(connection, encoded, general.request_interval_ms).await?;
+        Ok(Self {
+            client,
+            config: general,
+        })
     }
 
     pub async fn import(&self, mount: &str, input_folder: &Path) -> Result<()> {

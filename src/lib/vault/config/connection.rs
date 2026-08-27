@@ -29,8 +29,8 @@ pub struct VaultConnectionUserPassConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::ops::Deref;
     use crate::vault::VaultGeneralConfig;
+    use std::ops::Deref;
 
     #[test]
     fn test_deserialize_vault_connection_config_token() {
