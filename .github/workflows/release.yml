@@ -81,3 +81,12 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@5e98f10ce206463e411e82ac66ef0f2df79c5499
+
+      - name: Authenticate to crates.io
+        id: auth
+        uses: rust-lang/crates-io-auth-action@f14f407dad32919804d8e0550a5e471a82249cee
+
+      - name: Publish to crates.io
+        run: cargo publish
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}

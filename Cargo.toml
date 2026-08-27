@@ -5,9 +5,15 @@ authors      = ["John H"]
 repository   = "https://github.com/John361/vault-secrets"
 readme       = "README.md"
 license-file = "LICENSE"
-version      = "0.3.0"
+version      = "0.3.1"
 edition      = "2024"
 categories   = ["command-line-utilities", "security"]
+exclude      = [
+    ".github/**/*",
+    "ops/**/*",
+    "sonar-project.properties",
+    "vault-secrets.gpg"
+]
 
 [[bin]]
 name = "vault-secrets"
