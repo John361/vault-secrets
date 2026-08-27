@@ -15,13 +15,14 @@ Vault Secrets can also be used to export or import secrets from and to a Hashico
 ## Overview
 Vault Secrets is originally designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
 
-For personal convenient, it is always designed for full secrets exports and imports secrets backups. It's ok babe, I am thinking about you. :sunglasses:
+For personal convenient, it is always designed for full encrypted secrets exports and imports secrets backups.
 
 Key Features:
 - :lock: **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
 - :file_folder: **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output configuration is provided) for seamless pipeline and script integration
-- :outbox_tray: **Data export:** Export your data from your instance to a dedicated file with managed encryption
-- :inbox_tray: **Data import:** Import your data to your instance from a dedicated file with managed encryption
+- :outbox_tray: **Data export:** Export your data from your instance to a dedicated file with default managed encryption
+- :inbox_tray: **Data import:** Import your data to your instance from a dedicated file with default managed encryption
+- :alarm_clock: **Rate limiting:** Configure a sleep option to wait between each call to the Vault instance
 - :package: **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
 - :scroll: **Open Source:** Distributed under the terms of the GNU Affero General Public License v3 (AGPLv3)
 - :crab: **Reliability:** Lightweight and fast, written in Rust
