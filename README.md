@@ -19,7 +19,7 @@ For personal convenient, it is always designed for full secrets exports and impo
 
 Key Features:
 - :lock: **Secure Retrieval:** Interacts directly with Hashicorp Vault to fetch sensitive data dynamically
-- :file_folder: **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output option is provided) for seamless pipeline and script integration
+- :file_folder: **Base64 Encoding:** Outputs secrets in base64 format (unless the clear output configuration is provided) for seamless pipeline and script integration
 - :outbox_tray: **Data export:** Export your data from your instance to a dedicated file with managed encryption
 - :inbox_tray: **Data import:** Import your data to your instance from a dedicated file with managed encryption
 - :package: **Debian Packaging:** Fully integrated with GitHub Actions to automatically build and publish `.deb` packages for easy management via `apt`
@@ -176,7 +176,7 @@ The `.deb` package will be generated in `target/debian/` folder.
 vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
 
 # Clear output
-vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --key <SECRET_KEY>
+vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
 ```
 
 ### :outbox_tray: Export secrets
@@ -185,7 +185,7 @@ vault-secrets --config <CONFIG_FILE> --clear-output find --path <SECRET_PATH> --
 vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
 
 # YAML clear export
-vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --output-folder <OUTPUT_FOLDER>
+vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
 ```
 
 ### :inbox_tray: Import secrets
@@ -194,7 +194,7 @@ vault-secrets --config <CONFIG_FILE> --clear-output export --path <PATH> --outpu
 vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
 
 # YAML clear import
-vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input-folder <OUTPUT_FOLDER>
+vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
 ```
 
 ### :bulb: Example
@@ -202,10 +202,10 @@ vault-secrets --config <CONFIG_FILE> --clear-output import --path <PATH> --input
 vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
 # Output: base64-encoded secret
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output export --path "" --output-folder "./tests"
+vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-folder "./tests"
 # Output: in file
 
-vault-secrets --config /etc/vault-secrets/app.conf.yml --clear-output input --path "" --input-folder "./tests"
+vault-secrets --config /etc/vault-secrets/app.conf.yml input --path "" --input-folder "./tests"
 # Output: in your instance
 ```
 
