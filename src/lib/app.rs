@@ -13,7 +13,9 @@ pub async fn run() -> Result<()> {
             let business =
                 VaultFindBusiness::new(config.connection, config.find, config.request_interval_ms)
                     .await?;
-            let result = business.find(&args.path, &args.key).await?;
+            let result = business
+                .find(&args.mount, &args.path, &args.key, &args.engine)
+                .await?;
             println!("{result}");
         }
 

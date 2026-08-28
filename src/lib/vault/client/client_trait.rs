@@ -16,7 +16,7 @@ use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
 pub trait VaultClientTrait: Sized {
     async fn build_client(
-        connection: VaultConnectionConfig,
+        connection: &VaultConnectionConfig,
     ) -> anyhow::Result<vaultrs::client::VaultClient> {
         let client_builder = match &connection.mode {
             VaultConnectionModeConfig::Token(value) => VaultClientSettingsBuilder::default()
@@ -34,9 +34,9 @@ pub trait VaultClientTrait: Sized {
         let mut client = vaultrs::client::VaultClient::new(client_builder)
             .with_context(|| "Failed to create Vault client")?;
 
-        if let VaultConnectionModeConfig::UserPass(value) = connection.mode {
+        if let VaultConnectionModeConfig::UserPass(value) = &connection.mode {
             let login = UserpassLogin {
-                username: value.username,
+                username: value.username.clone(),
                 password: value.password.deref().to_string(),
             };
 

@@ -16,7 +16,7 @@ pub struct VaultClientKv1 {
 
 impl VaultClientKv1 {
     pub async fn new(
-        connection: VaultConnectionConfig,
+        connection: &VaultConnectionConfig,
         encode: bool,
         request_interval_ms: u64,
     ) -> Result<Self> {

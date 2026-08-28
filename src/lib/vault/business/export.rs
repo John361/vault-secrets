@@ -14,7 +14,7 @@ pub struct VaultExportBusiness {
 
 impl VaultExportBusiness {
     pub async fn new(connection: VaultConnectionConfig, request_interval_ms: u64) -> Result<Self> {
-        let client = VaultClientKv2::new(connection, false, request_interval_ms).await?;
+        let client = VaultClientKv2::new(&connection, false, request_interval_ms).await?;
         Ok(Self { client })
     }
 
