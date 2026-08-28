@@ -5,25 +5,44 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  pull-requests: read
-
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    needs: [rust, terraform, terragrunt, python]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          echo "All CI checks completed"
+          if [ "${{ needs.rust.result }}" != "success" ] || \
+             [ "${{ needs.terraform.result }}" != "success" ] || \
+             [ "${{ needs.terragrunt.result }}" != "success" ] || \
+             [ "${{ needs.python.result }}" != "success" ]; then
+            echo "Some jobs failed"
+            exit 1
+          fi
 
+  rust:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
         with:
           fetch-depth: 0
 
-      # Rust
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           toolchain: "stable"
           components: clippy, rustfmt
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16
 
       - name: Run cargo check
         run: cargo check --all-targets --all-features
@@ -37,11 +56,21 @@ jobs:
       - name: Run cargo test
         run: cargo test --release --all-targets --all-features --verbose
 
-      # Terraform
+  terraform:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          fetch-depth: 0
+
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@2cffc4b4c60ac87a35cdaa3c6e07485503492827
         with:
           tflint_version: v0.64.0
+          tflint_config_path: ops/terraform/libs/.tflint.hcl
           cache: true
 
       - name: Run TFLint
@@ -49,7 +78,16 @@ jobs:
           tflint --config=$(pwd)/ops/terraform/libs/.tflint.hcl --init
           tflint --config=$(pwd)/ops/terraform/libs/.tflint.hcl --recursive --format=compact --chdir=ops/terraform/libs --minimum-failure-severity=notice --no-color
 
-      # Terragrunt
+  terragrunt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          fetch-depth: 0
+
       - name: Setup Terragrunt
         uses: gruntwork-io/terragrunt-action@8c1d96b76d445fd2e41475a3f0b63dcd1d9cc077
         with:
@@ -61,7 +99,16 @@ jobs:
           cd ops/terraform/modules
           terragrunt hcl fmt --check
 
-      # Python
+  python:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          fetch-depth: 0
+
       - name: Setup Python
         uses: actions/setup-python@751276eafca55f10f252026015f43c488f2322ba
         with:
@@ -71,7 +118,7 @@ jobs:
         uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b
         with:
           enable-cache: true
-          cache-dependency-glob: "ops/scripts/python/uv.lock"
+          cache-dependency-glob: "uv.lock"
           working-directory: "ops/scripts/python"
 
       - name: Install python dependencies

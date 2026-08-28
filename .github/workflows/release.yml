@@ -11,17 +11,13 @@ on:
         description: "The version to deploy"
         required: true
 
-permissions:
-  contents: write
-  id-token: write
-  actions: write
-  pages: write
-
 jobs:
-  build-deb:
-    name: Build Debian Package
+  debian:
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
@@ -32,6 +28,9 @@ jobs:
         uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772
         with:
           toolchain: "stable"
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16
 
       - name: Install cargo-deb
         run: cargo install cargo-deb
@@ -81,6 +80,16 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@5e98f10ce206463e411e82ac66ef0f2df79c5499
+
+  cargo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          fetch-depth: 0
 
       - name: Authenticate to crates.io
         id: auth
