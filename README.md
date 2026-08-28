@@ -10,7 +10,7 @@ A secure, lightweight Rust CLI application designed to fetch secrets from Hashic
 
 This tool is specifically built for server automation scripts, allowing server administrators to securely retrieve runtime secrets without hardcoding credentials on the host system.
 
-Vault Secrets can also be used to export or import secrets from and to a Hashicorp Vault instances. This is useful for extracted backups.
+Vault Secrets can also be used to export or import secrets from and to a Hashicorp Vault instances. This is useful for extracted backups. Actually, only Kv1, Kv2 and cubbyhole are supported.
 
 ## Overview
 Vault Secrets is originally designed for server-side scripting scenarios where storing plaintext credentials is not an option. Instead of hardcoding secrets in your scripts or configuration files, you can retrieve them on-demand from HashiCorp Vault at runtime.
