@@ -45,9 +45,14 @@ impl VaultImportBusiness {
 
     async fn import_data(&self, mount: &str, data: Vec<VaultData>) -> Result<()> {
         self.client
-            .set_all(mount, data)
+            .set_all(mount, data.clone())
             .await
             .inspect(|_| tracing::debug!("Secrets imported to {mount}"))?;
+
+        self.client
+            .set_all_metadata(mount, data)
+            .await
+            .inspect(|_| tracing::debug!("Metadata imported to {mount}"))?;
 
         Ok(())
     }
