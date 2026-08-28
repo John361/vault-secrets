@@ -6,7 +6,9 @@ use anyhow::{Context, Result};
 use crate::FILE_EXTENSION;
 use crate::cli::SecretEngineType;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::client::{VaultClientKv1, VaultClientKv2, VaultClientTrait};
+use crate::vault::client::{
+    VaultClientCubbyhole, VaultClientKv1, VaultClientKv2, VaultClientTrait,
+};
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
@@ -67,6 +69,22 @@ impl VaultImportBusiness {
             SecretEngineType::Kv2 => {
                 let client =
                     VaultClientKv2::new(&self.connection, false, self.request_interval_ms).await?;
+
+                client
+                    .set_all(&mount.name, data.clone())
+                    .await
+                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
+
+                client
+                    .set_all_metadata(&mount.name, data)
+                    .await
+                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
+            }
+
+            SecretEngineType::Cubbyhole => {
+                let client =
+                    VaultClientCubbyhole::new(&self.connection, false, self.request_interval_ms)
+                        .await?;
 
                 client
                     .set_all(&mount.name, data.clone())

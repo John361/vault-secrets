@@ -11,7 +11,7 @@ use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
-use crate::vault::client::{VaultClientKv1, VaultClientKv2};
+use crate::vault::client::{VaultClientCubbyhole, VaultClientKv1, VaultClientKv2};
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
@@ -135,6 +135,7 @@ pub trait VaultClientTrait: Sized {
 }
 
 pub enum VaultClientEngine {
+    Cubbyhole(VaultClientCubbyhole),
     Kv1(VaultClientKv1),
     Kv2(VaultClientKv2),
 }

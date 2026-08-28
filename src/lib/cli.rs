@@ -84,6 +84,7 @@ pub struct ImportArgs {
 pub enum SecretEngineType {
     Kv1,
     Kv2,
+    Cubbyhole,
 }
 
 #[cfg(test)]
