@@ -57,8 +57,10 @@ mod tests {
           encode: true
         export:
           mounts:
-            - "secret"
-            - "secret-2"
+            - name: "secret-1"
+              engine: "Kv1"
+            - name: "secret-2"
+              engine: "Kv2"
         import:
           mounts:
             - name: "secret-1"
@@ -102,8 +104,10 @@ mod tests {
           encode: true
         export:
           mounts:
-            - "secret"
-            - "secret-2"
+            - name: "secret-1"
+              engine: "Kv1"
+            - name: "secret-2"
+              engine: "Kv2"
         import:
           mounts:
             - name: "secret-1"

@@ -44,7 +44,7 @@ impl VaultImportBusiness {
         let file_content = EncryptedSecret::decrypt(&file_content, encryption_passphrase)?;
         let data = serde_json::from_str(&file_content)?;
 
-        self.import_data(&mount, data).await
+        self.import_data(mount, data).await
     }
 
     async fn import_data(&self, mount: &VaultMountConfig, data: Vec<VaultData>) -> Result<()> {

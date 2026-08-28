@@ -11,6 +11,7 @@ use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
+use crate::vault::client::{VaultClientKv1, VaultClientKv2};
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
@@ -131,4 +132,9 @@ pub trait VaultClientTrait: Sized {
     async fn list_paths(&self, mount: &str, path: &str) -> anyhow::Result<Vec<String>>;
     async fn set_all(&self, mount: &str, data_list: Vec<VaultData>) -> anyhow::Result<()>;
     async fn set_all_metadata(&self, mount: &str, data_list: Vec<VaultData>) -> anyhow::Result<()>;
+}
+
+pub enum VaultClientEngine {
+    Kv1(VaultClientKv1),
+    Kv2(VaultClientKv2),
 }
