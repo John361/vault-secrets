@@ -66,16 +66,11 @@ impl VaultExportBusiness {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match self.client.find_all(mount, &full_path).await {
-                        Ok(secret_data) => {
-                            let cleaned_path = &full_path[1..];
-                            results.push(VaultData::new(cleaned_path.to_string(), secret_data));
-                        }
+                    let data = self.client.find_all(mount, &full_path).await?;
+                    let metadata = self.client.find_all_metadata(mount, &full_path).await?;
+                    let cleaned_path = &full_path[1..];
 
-                        Err(e) => {
-                            tracing::error!("Failed to read secret at {full_path}: {e}");
-                        }
-                    }
+                    results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
                 }
             }
         }
