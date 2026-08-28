@@ -54,7 +54,6 @@ mod tests {
               username: "admin"
               password: "changeme"
         find:
-          mount: "secret"
           encode: true
         export:
           mounts:
@@ -62,8 +61,10 @@ mod tests {
             - "secret-2"
         import:
           mounts:
-            - "secret"
-            - "secret-2"
+            - name: "secret-1"
+              engine: "Kv1"
+            - name: "secret-2"
+              engine: "Kv2"
         request_interval_ms: 200
         encryption_passphrase: "changeme"
     "#;
@@ -98,7 +99,6 @@ mod tests {
           mode:
             token: "changeme"
         find:
-          mount: "secret"
           encode: true
         export:
           mounts:
@@ -106,8 +106,10 @@ mod tests {
             - "secret-2"
         import:
           mounts:
-            - "secret"
-            - "secret-2"
+            - name: "secret-1"
+              engine: "Kv1"
+            - name: "secret-2"
+              engine: "Kv2"
         request_interval_ms: 200
         encryption_passphrase: "changeme"
     "#;

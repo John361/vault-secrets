@@ -2,6 +2,7 @@ use std::path::PathBuf;
 
 use clap::Parser;
 use clap::{Args, ValueEnum};
+use serde::Deserialize;
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
@@ -79,7 +80,7 @@ pub struct ImportArgs {
     pub input_folder: PathBuf,
 }
 
-#[derive(Debug, Clone, PartialEq, ValueEnum)]
+#[derive(Clone, Debug, Deserialize, PartialEq, ValueEnum)]
 pub enum SecretEngineType {
     Kv1,
     Kv2,
