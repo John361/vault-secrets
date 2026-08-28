@@ -5,12 +5,12 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-permissions:
-  pull-requests: read
-
 jobs:
   ci:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
     needs: [rust, terraform, terragrunt, python]
     if: always()
     steps:
@@ -27,6 +27,8 @@ jobs:
 
   rust:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
@@ -56,6 +58,8 @@ jobs:
 
   terraform:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
@@ -76,6 +80,8 @@ jobs:
 
   terragrunt:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
@@ -95,6 +101,8 @@ jobs:
 
   python:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
