@@ -74,19 +74,23 @@ impl VaultClient {
     }
 
     pub async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let mut raw_results: HashMap<String, String> =
+        let raw_results: HashMap<String, String> =
             kv2::read(&self.client, mount, path)
                 .await
                 .with_context(|| format!("Error reading path {path}"))?;
+        let results = self.to_secrets(raw_results);
+
+        self.sleep().await;
+        Ok(results)
+    }
+
+    pub async fn find_all_metadata(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
+        let raw_results = kv2::read_metadata(&self.client, mount, path).await
+            .with_context(|| format!("Error reading metadata path {path}"))?;
         let mut results = HashMap::new();
 
-        for result in raw_results.iter_mut() {
-            if self.encode {
-                *result.1 = STANDARD.encode(result.1.as_bytes());
-            }
-
-            let secret = Secret::new(result.1.to_string());
-            results.insert(result.0.to_string(), secret);
+        if let Some(metadata) = raw_results.custom_metadata {
+            results = self.to_secrets(metadata);
         }
 
         self.sleep().await;
@@ -146,5 +150,20 @@ impl VaultClient {
     async fn sleep(&self) {
         let request_interval = Duration::from_millis(self.request_interval_ms);
         tokio::time::sleep(request_interval).await;
+    }
+
+    fn to_secrets(&self, mut data: HashMap<String, String>) -> HashMap<String, Secret> {
+        let mut results = HashMap::new();
+
+        for item in data.iter_mut() {
+            if self.encode {
+                *item.1 = STANDARD.encode(item.1.as_bytes());
+            }
+
+            let secret = Secret::new(item.1.to_string());
+            results.insert(item.0.to_string(), secret);
+        }
+
+        results
     }
 }
