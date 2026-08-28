@@ -4,30 +4,34 @@ use std::path::Path;
 use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
+use crate::cli::SecretEngineType;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::VaultConnectionConfig;
-use crate::vault::client::VaultClient;
+use crate::vault::client::{VaultClientKv1, VaultClientKv2, VaultClientTrait};
 use crate::vault::model::VaultData;
+use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
 pub struct VaultImportBusiness {
-    client: VaultClient,
+    connection: VaultConnectionConfig,
+    request_interval_ms: u64,
 }
 
 impl VaultImportBusiness {
     pub async fn new(connection: VaultConnectionConfig, request_interval_ms: u64) -> Result<Self> {
-        let client = VaultClient::new(connection, false, request_interval_ms).await?;
-        Ok(Self { client })
+        Ok(Self {
+            connection,
+            request_interval_ms,
+        })
     }
 
     pub async fn import(
         &self,
-        mount: &str,
+        mount: &VaultMountConfig,
         input_folder: &Path,
         encryption_passphrase: Secret,
     ) -> Result<()> {
         self.check_folder(input_folder)?;
 
-        let file_path = input_folder.join(format!("{mount}{FILE_EXTENSION}"));
+        let file_path = input_folder.join(format!("{}{FILE_EXTENSION}", mount.name));
         let mut file_content = String::new();
 
         std::fs::File::open(&file_path)
@@ -43,16 +47,38 @@ impl VaultImportBusiness {
         self.import_data(mount, data).await
     }
 
-    async fn import_data(&self, mount: &str, data: Vec<VaultData>) -> Result<()> {
-        self.client
-            .set_all(mount, data.clone())
-            .await
-            .inspect(|_| tracing::debug!("Secrets imported to {mount}"))?;
+    async fn import_data(&self, mount: &VaultMountConfig, data: Vec<VaultData>) -> Result<()> {
+        match mount.engine {
+            SecretEngineType::Kv1 => {
+                let client =
+                    VaultClientKv1::new(&self.connection, false, self.request_interval_ms).await?;
 
-        self.client
-            .set_all_metadata(mount, data)
-            .await
-            .inspect(|_| tracing::debug!("Metadata imported to {mount}"))?;
+                client
+                    .set_all(&mount.name, data.clone())
+                    .await
+                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
+
+                client
+                    .set_all_metadata(&mount.name, data)
+                    .await
+                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
+            }
+
+            SecretEngineType::Kv2 => {
+                let client =
+                    VaultClientKv2::new(&self.connection, false, self.request_interval_ms).await?;
+
+                client
+                    .set_all(&mount.name, data.clone())
+                    .await
+                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
+
+                client
+                    .set_all_metadata(&mount.name, data)
+                    .await
+                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
+            }
+        }
 
         Ok(())
     }

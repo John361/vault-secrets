@@ -20,16 +20,17 @@ connection:
       password: "changeme"
 
 find:
-  mount: "vault-secrets-dev"
   encode: true
 
 export:
   mounts:
-    - "vault-secrets-dev"
+    - name: "vault-secrets-dev"
+      engine: "Kv2"
 
 import:
   mounts:
-    - "vault-secrets-tests"
+    - name: "vault-secrets-tests"
+      engine: "Kv2"
 
 request_interval_ms: 200
 encryption_passphrase: "changeme"

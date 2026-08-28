@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
-use clap::Args;
 use clap::Parser;
+use clap::{Args, ValueEnum};
+use serde::Deserialize;
 
 #[derive(Debug, Parser)]
 #[command(version, name = "vault-secrets", bin_name = "vault-secrets")]
@@ -46,11 +47,17 @@ pub enum Commands {
 #[derive(Args, Debug)]
 #[command(about = "Find arguments", long_about = None)]
 pub struct FindArgs {
+    #[arg(long, help = "Mount name (required)", required = true)]
+    pub mount: String,
+
     #[arg(long, help = "Path to secret (required)", required = true)]
     pub path: String,
 
     #[arg(long, help = "Secret key name (required)", required = true)]
     pub key: String,
+
+    #[arg(long, help = "Secret engine type (optional)", default_value = "kv2")]
+    pub engine: SecretEngineType,
 }
 
 #[derive(Args, Debug)]
@@ -73,6 +80,12 @@ pub struct ImportArgs {
     pub input_folder: PathBuf,
 }
 
+#[derive(Clone, Debug, Deserialize, PartialEq, ValueEnum)]
+pub enum SecretEngineType {
+    Kv1,
+    Kv2,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -85,18 +98,24 @@ mod tests {
             "--config",
             "/tmp/config.yaml",
             "find",
+            "--mount",
+            "mount",
             "--path",
             "secret/data/mysql",
             "--key",
             "password",
+            "--engine",
+            "kv1",
         ];
 
         let cli = Cli::try_load_from(args).unwrap();
         assert_eq!(cli.config, "/tmp/config.yaml");
 
         if let Commands::Find(args) = &cli.command {
+            assert_eq!(args.mount, "mount");
             assert_eq!(args.path, "secret/data/mysql");
             assert_eq!(args.key, "password");
+            assert_eq!(args.engine, SecretEngineType::Kv1);
         }
     }
 
@@ -149,6 +168,8 @@ mod tests {
         let args = vec![
             "vault-secrets",
             "find",
+            "--mount",
+            "tests",
             "--path",
             "secret/data/mysql",
             "--key",
@@ -203,6 +224,8 @@ mod tests {
             "--config",
             "/tmp/config.yaml",
             "find",
+            "--mount",
+            "mount",
             "--path",
             "secret/data/mysql",
             "--key",
@@ -213,8 +236,10 @@ mod tests {
         assert_eq!(cli.config, "/tmp/config.yaml");
 
         if let Commands::Find(args) = cli.command {
+            assert_eq!(args.mount, "mount");
             assert_eq!(args.path, "secret/data/mysql");
             assert_eq!(args.key, "password");
+            assert_eq!(args.engine, SecretEngineType::Kv2);
         }
     }
 

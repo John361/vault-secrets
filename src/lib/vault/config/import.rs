@@ -1,25 +1,38 @@
 use serde::Deserialize;
 
+use crate::vault::VaultMountConfig;
+
 #[derive(Deserialize)]
 pub struct VaultImportConfig {
-    pub mounts: Vec<String>,
+    pub mounts: Vec<VaultMountConfig>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::cli::SecretEngineType;
 
     #[test]
     fn test_deserialize_vault_import_config_json() {
         let json = r#"
         {
-            "mounts": ["my-path-1", "my-path-2"]
+            "mounts": [{
+                "name": "my-path-1",
+                "engine": "Kv1"
+            }, {
+                "name": "my-path-2",
+                "engine": "Kv2"
+            }]
         }
         "#;
 
         let config: VaultImportConfig = serde_json::from_str(json).unwrap();
 
-        assert_eq!(config.mounts, vec!["my-path-1", "my-path-2"]);
+        assert_eq!(config.mounts.len(), 2);
+        assert_eq!(config.mounts[0].name, "my-path-1");
+        assert_eq!(config.mounts[0].engine, SecretEngineType::Kv1);
+        assert_eq!(config.mounts[1].name, "my-path-2");
+        assert_eq!(config.mounts[1].engine, SecretEngineType::Kv2);
     }
 
     #[test]
