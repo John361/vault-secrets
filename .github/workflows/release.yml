@@ -11,15 +11,13 @@ on:
         description: "The version to deploy"
         required: true
 
-permissions:
-  contents: write
-  id-token: write
-  actions: write
-  pages: write
-
 jobs:
   debian:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      pages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
@@ -85,6 +83,8 @@ jobs:
 
   cargo:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
