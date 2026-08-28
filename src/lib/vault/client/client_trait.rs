@@ -7,12 +7,12 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::sys::mount;
-use vaultrs_login::engines::userpass::UserpassLogin;
 use vaultrs_login::LoginClient;
+use vaultrs_login::engines::userpass::UserpassLogin;
 
 use crate::secret::Secret;
-use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 use crate::vault::model::VaultData;
+use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
 pub trait VaultClientTrait: Sized {
     async fn build_client(
@@ -123,7 +123,11 @@ pub trait VaultClientTrait: Sized {
     }
 
     async fn find_all(&self, mount: &str, path: &str) -> anyhow::Result<HashMap<String, Secret>>;
-    async fn find_all_metadata(&self, mount: &str, path: &str) -> anyhow::Result<HashMap<String, Secret>>;
+    async fn find_all_metadata(
+        &self,
+        mount: &str,
+        path: &str,
+    ) -> anyhow::Result<HashMap<String, Secret>>;
     async fn list_paths(&self, mount: &str, path: &str) -> anyhow::Result<Vec<String>>;
     async fn set_all(&self, mount: &str, data_list: Vec<VaultData>) -> anyhow::Result<()>;
     async fn set_all_metadata(&self, mount: &str, data_list: Vec<VaultData>) -> anyhow::Result<()>;

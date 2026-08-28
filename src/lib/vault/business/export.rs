@@ -5,16 +5,16 @@ use anyhow::{Context, Result};
 use crate::FILE_EXTENSION;
 use crate::secret::{EncryptedSecret, Secret};
 use crate::vault::VaultConnectionConfig;
-use crate::vault::client::{VaultClient, VaultClientTrait};
+use crate::vault::client::{VaultClientKv2, VaultClientTrait};
 use crate::vault::model::VaultData;
 
 pub struct VaultExportBusiness {
-    client: VaultClient,
+    client: VaultClientKv2,
 }
 
 impl VaultExportBusiness {
     pub async fn new(connection: VaultConnectionConfig, request_interval_ms: u64) -> Result<Self> {
-        let client = VaultClient::new(connection, false, request_interval_ms).await?;
+        let client = VaultClientKv2::new(connection, false, request_interval_ms).await?;
         Ok(Self { client })
     }
 

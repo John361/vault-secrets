@@ -5,17 +5,17 @@ use vaultrs::api::kv2::requests::SetSecretMetadataRequestBuilder;
 use vaultrs::kv2;
 
 use crate::secret::Secret;
+use crate::vault::VaultConnectionConfig;
 use crate::vault::client::VaultClientTrait;
 use crate::vault::model::VaultData;
-use crate::vault::VaultConnectionConfig;
 
-pub struct VaultClient {
+pub struct VaultClientKv2 {
     client: vaultrs::client::VaultClient,
     encode: bool,
     request_interval_ms: u64,
 }
 
-impl VaultClient {
+impl VaultClientKv2 {
     pub async fn new(
         connection: VaultConnectionConfig,
         encode: bool,
@@ -31,7 +31,7 @@ impl VaultClient {
     }
 }
 
-impl VaultClientTrait for VaultClient {
+impl VaultClientTrait for VaultClientKv2 {
     async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
         let raw_results: HashMap<String, String> = kv2::read(&self.client, mount, path)
             .await
