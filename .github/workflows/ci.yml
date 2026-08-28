@@ -9,6 +9,22 @@ permissions:
   pull-requests: read
 
 jobs:
+  ci:
+    runs-on: ubuntu-latest
+    needs: [rust, terraform, terragrunt, python]
+    if: always()
+    steps:
+      - name: Check status
+        run: |
+          echo "All CI checks completed"
+          if [ "${{ needs.rust.result }}" != "success" ] || \
+             [ "${{ needs.terraform.result }}" != "success" ] || \
+             [ "${{ needs.terragrunt.result }}" != "success" ] || \
+             [ "${{ needs.python.result }}" != "success" ]; then
+            echo "Some jobs failed"
+            exit 1
+          fi
+
   rust:
     runs-on: ubuntu-latest
     steps:
