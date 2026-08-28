@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 use crate::FILE_EXTENSION;
 use crate::secret::{EncryptedSecret, Secret};
 use crate::vault::VaultConnectionConfig;
-use crate::vault::client::VaultClient;
+use crate::vault::client::{VaultClient, VaultClientTrait};
 use crate::vault::model::VaultData;
 
 pub struct VaultExportBusiness {

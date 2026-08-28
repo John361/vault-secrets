@@ -16,18 +16,10 @@ use crate::secret::Secret;
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
-pub struct VaultClient {
-    client: vaultrs::client::VaultClient,
-    encode: bool,
-    request_interval_ms: u64,
-}
-
-impl VaultClient {
-    pub async fn new(
+pub trait VaultClientTrait: Sized {
+    async fn build_client(
         connection: VaultConnectionConfig,
-        encode: bool,
-        request_interval_ms: u64,
-    ) -> Result<Self> {
+    ) -> Result<vaultrs::client::VaultClient> {
         let client_builder = match &connection.mode {
             VaultConnectionModeConfig::Token(value) => VaultClientSettingsBuilder::default()
                 .address(connection.address.clone())
@@ -57,14 +49,10 @@ impl VaultClient {
         }
 
         tracing::debug!("Vault connection initialized");
-        Ok(Self {
-            client,
-            encode,
-            request_interval_ms,
-        })
+        Ok(client)
     }
 
-    pub async fn find(&self, mount: &str, path: &str, key: &str) -> Result<Secret> {
+    async fn find(&self, mount: &str, path: &str, key: &str) -> Result<Secret> {
         let result = self.find_all(mount, path).await?;
         let value = result
             .get(key)
@@ -74,99 +62,34 @@ impl VaultClient {
         Ok(value)
     }
 
-    pub async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_results: HashMap<String, String> = kv2::read(&self.client, mount, path)
-            .await
-            .with_context(|| format!("Error reading path {path}"))?;
-        let results = self.to_secrets(raw_results);
-
-        self.sleep().await;
-        Ok(results)
-    }
-
-    pub async fn find_all_metadata(
+    async fn create_mount_if_not_exists(
         &self,
+        client: &vaultrs::client::VaultClient,
         mount: &str,
-        path: &str,
-    ) -> Result<HashMap<String, Secret>> {
-        let raw_results = kv2::read_metadata(&self.client, mount, path)
-            .await
-            .with_context(|| format!("Error reading metadata path {path}"))?;
-        let mut results = HashMap::new();
-
-        if let Some(metadata) = raw_results.custom_metadata {
-            results = self.to_secrets(metadata);
-        }
-
-        self.sleep().await;
-        Ok(results)
-    }
-
-    pub async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>> {
-        let result = kv2::list(&self.client, mount, path)
-            .await
-            .with_context(|| format!("Error listing path {path}"))?;
-
-        self.sleep().await;
-        Ok(result)
-    }
-
-    pub async fn set_all(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
-        self.create_mount_if_not_exists(mount).await?;
-
-        for item in data_list.iter_mut() {
-            let data = self.decode_secrets(item.data.clone())?;
-
-            kv2::set(&self.client, mount, &item.path, &data).await?;
-            self.sleep().await;
-        }
-
-        Ok(())
-    }
-
-    pub async fn set_all_metadata(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
-        self.create_mount_if_not_exists(mount).await?;
-
-        for item in data_list.iter_mut() {
-            let metadata = self.decode_secrets(item.metadata.clone())?;
-            let mut builder = SetSecretMetadataRequestBuilder::default();
-            builder.custom_metadata(metadata);
-
-            kv2::set_metadata(&self.client, mount, &item.path, Some(&mut builder))
-                .await
-                .with_context(|| format!("Error setting metadata for {mount} {}", item.path))?;
-            self.sleep().await;
-        }
-
-        Ok(())
-    }
-
-    async fn create_mount_if_not_exists(&self, mount: &str) -> Result<()> {
-        let mount_exists = mount::list(&self.client)
+    ) -> Result<()> {
+        let mount_exists = mount::list(client)
             .await
             .with_context(|| "Error listing mounts")?
             .contains_key(&format!("{mount}/"));
 
         if !mount_exists {
-            mount::enable(&self.client, mount, "kv-v2", None).await?;
-
-            self.sleep().await;
+            mount::enable(client, mount, "kv-v2", None).await?;
             tracing::debug!("Mount {mount} enabled");
         }
 
         Ok(())
     }
 
-    async fn sleep(&self) {
-        let request_interval = Duration::from_millis(self.request_interval_ms);
+    async fn sleep(request_interval_ms: u64) {
+        let request_interval = Duration::from_millis(request_interval_ms);
         tokio::time::sleep(request_interval).await;
     }
 
-    fn to_secrets(&self, mut data: HashMap<String, String>) -> HashMap<String, Secret> {
+    fn encode_secrets(mut data: HashMap<String, String>, encode: bool) -> HashMap<String, Secret> {
         let mut results = HashMap::new();
 
         for item in data.iter_mut() {
-            if self.encode {
+            if encode {
                 *item.1 = STANDARD.encode(item.1.as_bytes());
             }
 
@@ -177,13 +100,16 @@ impl VaultClient {
         results
     }
 
-    fn decode_secrets(&self, mut data: HashMap<String, Secret>) -> Result<HashMap<String, String>> {
+    fn decode_secrets(
+        mut data: HashMap<String, Secret>,
+        encode: bool,
+    ) -> Result<HashMap<String, String>> {
         let mut results = HashMap::new();
 
         for item in data.iter_mut() {
             let mut value = item.1.deref().to_string();
 
-            if self.encode {
+            if encode {
                 let decoded = STANDARD
                     .decode(item.1.as_bytes())
                     .with_context(|| format!("Error decoding encoded secret for {}", item.0))?;
@@ -196,5 +122,98 @@ impl VaultClient {
         }
 
         Ok(results)
+    }
+
+    async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>>;
+    async fn find_all_metadata(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>>;
+    async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>>;
+    async fn set_all(&self, mount: &str, data_list: Vec<VaultData>) -> Result<()>;
+    async fn set_all_metadata(&self, mount: &str, data_list: Vec<VaultData>) -> Result<()>;
+}
+
+pub struct VaultClient {
+    client: vaultrs::client::VaultClient,
+    encode: bool,
+    request_interval_ms: u64,
+}
+
+impl VaultClient {
+    pub async fn new(
+        connection: VaultConnectionConfig,
+        encode: bool,
+        request_interval_ms: u64,
+    ) -> Result<Self> {
+        let client = Self::build_client(connection).await?;
+
+        Ok(Self {
+            client,
+            encode,
+            request_interval_ms,
+        })
+    }
+}
+
+impl VaultClientTrait for VaultClient {
+    async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
+        let raw_results: HashMap<String, String> = kv2::read(&self.client, mount, path)
+            .await
+            .with_context(|| format!("Error reading path {path}"))?;
+        let results = Self::encode_secrets(raw_results, self.encode);
+
+        Self::sleep(self.request_interval_ms).await;
+        Ok(results)
+    }
+
+    async fn find_all_metadata(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
+        let raw_results = kv2::read_metadata(&self.client, mount, path)
+            .await
+            .with_context(|| format!("Error reading metadata path {path}"))?;
+        let mut results = HashMap::new();
+
+        if let Some(metadata) = raw_results.custom_metadata {
+            results = Self::encode_secrets(metadata, self.encode);
+        }
+
+        Self::sleep(self.request_interval_ms).await;
+        Ok(results)
+    }
+
+    async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>> {
+        let result = kv2::list(&self.client, mount, path)
+            .await
+            .with_context(|| format!("Error listing path {path}"))?;
+
+        Self::sleep(self.request_interval_ms).await;
+        Ok(result)
+    }
+
+    async fn set_all(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
+        self.create_mount_if_not_exists(&self.client, mount).await?;
+
+        for item in data_list.iter_mut() {
+            let data = Self::decode_secrets(item.data.clone(), self.encode)?;
+
+            kv2::set(&self.client, mount, &item.path, &data).await?;
+            Self::sleep(self.request_interval_ms).await;
+        }
+
+        Ok(())
+    }
+
+    async fn set_all_metadata(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
+        self.create_mount_if_not_exists(&self.client, mount).await?;
+
+        for item in data_list.iter_mut() {
+            let metadata = Self::decode_secrets(item.metadata.clone(), self.encode)?;
+            let mut builder = SetSecretMetadataRequestBuilder::default();
+            builder.custom_metadata(metadata);
+
+            kv2::set_metadata(&self.client, mount, &item.path, Some(&mut builder))
+                .await
+                .with_context(|| format!("Error setting metadata for {mount} {}", item.path))?;
+            Self::sleep(self.request_interval_ms).await;
+        }
+
+        Ok(())
     }
 }

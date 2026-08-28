@@ -2,7 +2,7 @@ use std::ops::Deref;
 
 use anyhow::Result;
 
-use crate::vault::client::VaultClient;
+use crate::vault::client::{VaultClient, VaultClientTrait};
 use crate::vault::{VaultConnectionConfig, VaultFindConfig};
 
 pub struct VaultFindBusiness {
