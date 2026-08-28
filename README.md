@@ -173,34 +173,26 @@ The `.deb` package will be generated in `target/debian/` folder.
 ## :book: Usage
 ### :mag: Find secrets
 ```shell
-# Base64 output
-vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
-
-# Clear output
-vault-secrets --config <CONFIG_FILE> find --path <SECRET_PATH> --key <SECRET_KEY>
+# Basic usage
+vault-secrets --config <CONFIG_FILE> find --mount <MOUNT_PATH> --path <SECRET_PATH> --key <SECRET_KEY>
 ```
 
 ### :outbox_tray: Export secrets
 ```shell
-# JSON base64 export
-vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
-
-# YAML clear export
+# Basic usage
 vault-secrets --config <CONFIG_FILE> export --path <PATH> --output-folder <OUTPUT_FOLDER>
 ```
 
 ### :inbox_tray: Import secrets
 ```shell
-# JSON base64 import
-vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
-
-# YAML clear import
+# Basic usage
 vault-secrets --config <CONFIG_FILE> import --path <PATH> --input-folder <OUTPUT_FOLDER>
 ```
 
 ### :bulb: Example
 ```shell
-vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/users/my-app" --key "api_key"
+vault-secrets --config /etc/vault-secrets/app.conf.yml find --mount "secret-v2" --path "vault/users/my-app" --key "api_key"
+vault-secrets --config /etc/vault-secrets/app.conf.yml find --mount "secret-v1" --path "vault/users/my-app" --key "api_key" --engine "kv1"
 # Output: base64-encoded secret
 
 vault-secrets --config /etc/vault-secrets/app.conf.yml export --path "" --output-folder "./tests"
@@ -215,7 +207,7 @@ vault-secrets --config /etc/vault-secrets/app.conf.yml input --path "" --input-f
 ```shell
 #!/bin/bash
 
-API_KEY=$(vault-secrets --config /etc/vault-secrets/app.conf.yml find --path "vault/services/api" --key "key" | base64 -d)
+API_KEY=$(vault-secrets --config /etc/vault-secrets/app.conf.yml find --mount "secret-v2" --path "vault/services/api" --key "key" | base64 -d)
 curl -H "Authorization: Bearer ${API_KEY}" https://api.example.com/data
 ```
 
