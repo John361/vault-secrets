@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::secret::Secret;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 pub struct VaultData {
     pub path: String,
     pub data: HashMap<String, Secret>,

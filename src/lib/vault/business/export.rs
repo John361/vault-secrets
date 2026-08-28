@@ -50,11 +50,7 @@ impl VaultExportBusiness {
         let mut stack = vec![root_path.to_string()];
 
         while let Some(current_path) = stack.pop() {
-            let items = self
-                .client
-                .list_paths(mount, &current_path)
-                .await
-                .inspect(|_| tracing::debug!("Listing path from {current_path}"))?;
+            let items = self.client.list_paths(mount, &current_path).await?;
 
             for item in items {
                 let full_path = if current_path.ends_with("/") {

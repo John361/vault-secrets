@@ -5,6 +5,7 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
+use vaultrs::api::kv2::requests::SetSecretMetadataRequestBuilder;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::kv2;
 use vaultrs::sys::mount;
@@ -114,21 +115,26 @@ impl VaultClient {
         self.create_mount_if_not_exists(mount).await?;
 
         for item in data_list.iter_mut() {
-            if self.encode {
-                for (key, secret) in item.data.iter_mut() {
-                    let decoded = STANDARD.decode(secret.as_bytes()).with_context(|| {
-                        format!("Error decoding data for key {key} on path {}", item.path)
-                    })?;
+            let data = self.decode_secrets(item.data.clone())?;
 
-                    let decoded = String::from_utf8(decoded).with_context(|| {
-                        format!("Error converting data for key {key} on path {}", item.path)
-                    })?;
+            kv2::set(&self.client, mount, &item.path, &data).await?;
+            self.sleep().await;
+        }
 
-                    *secret = Secret::new(decoded);
-                }
-            }
+        Ok(())
+    }
 
-            kv2::set(&self.client, mount, &item.path, &item.data).await?;
+    pub async fn set_all_metadata(&self, mount: &str, mut data_list: Vec<VaultData>) -> Result<()> {
+        self.create_mount_if_not_exists(mount).await?;
+
+        for item in data_list.iter_mut() {
+            let metadata = self.decode_secrets(item.metadata.clone())?;
+            let mut builder = SetSecretMetadataRequestBuilder::default();
+            builder.custom_metadata(metadata);
+
+            kv2::set_metadata(&self.client, mount, &item.path, Some(&mut builder))
+                .await
+                .with_context(|| format!("Error setting metadata for {mount} {}", item.path))?;
             self.sleep().await;
         }
 
@@ -169,5 +175,26 @@ impl VaultClient {
         }
 
         results
+    }
+
+    fn decode_secrets(&self, mut data: HashMap<String, Secret>) -> Result<HashMap<String, String>> {
+        let mut results = HashMap::new();
+
+        for item in data.iter_mut() {
+            let mut value = item.1.deref().to_string();
+
+            if self.encode {
+                let decoded = STANDARD
+                    .decode(item.1.as_bytes())
+                    .with_context(|| format!("Error decoding encoded secret for {}", item.0))?;
+
+                value = String::from_utf8(decoded)
+                    .with_context(|| format!("Error converting encoded secret for {}", item.0))?;
+            }
+
+            results.insert(item.0.to_string(), value);
+        }
+
+        Ok(results)
     }
 }
