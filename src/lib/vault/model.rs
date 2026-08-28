@@ -12,7 +12,15 @@ pub struct VaultData {
 }
 
 impl VaultData {
-    pub fn new(path: String, data: HashMap<String, Secret>, metadata: HashMap<String, Secret>) -> Self {
-        Self { path, data, metadata }
+    pub fn new(
+        path: String,
+        data: HashMap<String, Secret>,
+        metadata: HashMap<String, Secret>,
+    ) -> Self {
+        Self {
+            path,
+            data,
+            metadata,
+        }
     }
 }

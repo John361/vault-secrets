@@ -74,18 +74,22 @@ impl VaultClient {
     }
 
     pub async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_results: HashMap<String, String> =
-            kv2::read(&self.client, mount, path)
-                .await
-                .with_context(|| format!("Error reading path {path}"))?;
+        let raw_results: HashMap<String, String> = kv2::read(&self.client, mount, path)
+            .await
+            .with_context(|| format!("Error reading path {path}"))?;
         let results = self.to_secrets(raw_results);
 
         self.sleep().await;
         Ok(results)
     }
 
-    pub async fn find_all_metadata(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_results = kv2::read_metadata(&self.client, mount, path).await
+    pub async fn find_all_metadata(
+        &self,
+        mount: &str,
+        path: &str,
+    ) -> Result<HashMap<String, Secret>> {
+        let raw_results = kv2::read_metadata(&self.client, mount, path)
+            .await
             .with_context(|| format!("Error reading metadata path {path}"))?;
         let mut results = HashMap::new();
 
