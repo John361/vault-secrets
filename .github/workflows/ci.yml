@@ -50,6 +50,7 @@ jobs:
         uses: terraform-linters/setup-tflint@2cffc4b4c60ac87a35cdaa3c6e07485503492827
         with:
           tflint_version: v0.64.0
+          tflint_config_path: ops/terraform/libs/.tflint.hcl
           cache: true
 
       - name: Run TFLint
@@ -93,7 +94,7 @@ jobs:
         uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b
         with:
           enable-cache: true
-          cache-dependency-glob: "ops/scripts/python/uv.lock"
+          cache-dependency-glob: "uv.lock"
           working-directory: "ops/scripts/python"
 
       - name: Install python dependencies
