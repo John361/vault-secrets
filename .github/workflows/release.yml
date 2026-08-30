@@ -150,14 +150,35 @@ jobs:
         id: get_tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Get release id
+        id: get_release
+        run: |
+          RESPONSE=$(curl -s --fail \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${REPOSITORY}/releases/tags/${TAG}")
+
+          RELEASE_ID=$(echo "${RESPONSE}" | python3 -c "import sys, json; data=json.load(sys.stdin); print(data.get('id', ''))")
+
+          if [ -z "${RELEASE_ID" ]; then
+            echo "Error: Release not found for tag ${TAG}"
+            echo "${RESPONSE}"
+            exit 1
+          fi
+
+          echo "release_id=$RELEASE_ID" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ steps.get_tag.outputs.tag }}
+
       - name: Publish Release
         run: |
           curl -X PATCH \
             -H "Authorization: token ${GITHUB_TOKEN}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            https://api.github.com/repos/${REPOSITORY}/releases/tags/${TAG} \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/John361/vault-secrets/releases/tags/${TAG}" \
             -d '{"draft": false}'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
-          REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.get_tag.outputs.tag }}
