@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 
 use anyhow::{Context, Result};
-use vaultrs::kv1;
+use vaultrs::cubbyhole;
 
 use crate::secret::Secret;
 use crate::vault::client::VaultClientTrait;
 use crate::vault::model::VaultData;
 
-pub struct VaultClientKv1 {
+pub struct VaultClientCubbyhole {
     client: vaultrs::client::VaultClient,
     encode: bool,
     request_interval_ms: u64,
 }
 
-impl VaultClientKv1 {
+impl VaultClientCubbyhole {
     pub fn new(
         client: vaultrs::client::VaultClient,
         encode: bool,
@@ -27,9 +27,9 @@ impl VaultClientKv1 {
     }
 }
 
-impl VaultClientTrait for VaultClientKv1 {
+impl VaultClientTrait for VaultClientCubbyhole {
     async fn find_all(&self, mount: &str, path: &str) -> Result<HashMap<String, Secret>> {
-        let raw_results: HashMap<String, String> = kv1::get(&self.client, mount, path)
+        let raw_results: HashMap<String, String> = cubbyhole::get(&self.client, mount, path)
             .await
             .with_context(|| format!("Error reading path {path}"))?;
         let results = Self::encode_secrets(raw_results, self.encode);
@@ -43,7 +43,7 @@ impl VaultClientTrait for VaultClientKv1 {
     }
 
     async fn list_paths(&self, mount: &str, path: &str) -> Result<Vec<String>> {
-        let result = kv1::list(&self.client, mount, path)
+        let result = cubbyhole::list(&self.client, mount, path)
             .await
             .with_context(|| format!("Error listing path {path}"))?;
 
@@ -59,7 +59,7 @@ impl VaultClientTrait for VaultClientKv1 {
             let data: HashMap<&str, String> =
                 data.iter().map(|(k, v)| (k.as_str(), v.clone())).collect();
 
-            kv1::set(&self.client, mount, &item.path, &data).await?;
+            cubbyhole::set(&self.client, mount, &item.path, &data).await?;
             Self::sleep(self.request_interval_ms).await;
         }
 

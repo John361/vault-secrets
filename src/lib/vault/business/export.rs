@@ -3,9 +3,8 @@ use std::path::PathBuf;
 use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
-use crate::cli::SecretEngineType;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientKv2, VaultClientTrait};
+use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientTrait};
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
@@ -57,20 +56,21 @@ impl VaultExportBusiness {
         let mut results = Vec::new();
         let mut stack = vec![root_path.to_string()];
 
-        let client: VaultClientEngine = match mount.engine {
-            SecretEngineType::Kv1 => VaultClientEngine::Kv1(
-                VaultClientKv1::new(&self.connection, false, self.request_interval_ms).await?,
-            ),
-
-            SecretEngineType::Kv2 => VaultClientEngine::Kv2(
-                VaultClientKv2::new(&self.connection, false, self.request_interval_ms).await?,
-            ),
-        };
+        let client = VaultClientKv1::build_client(
+            &mount.engine,
+            &self.connection,
+            false,
+            self.request_interval_ms,
+        )
+        .await?;
 
         while let Some(current_path) = stack.pop() {
             let items = match &client {
                 VaultClientEngine::Kv1(item) => item.list_paths(&mount.name, &current_path).await?,
                 VaultClientEngine::Kv2(item) => item.list_paths(&mount.name, &current_path).await?,
+                VaultClientEngine::Cubbyhole(item) => {
+                    item.list_paths(&mount.name, &current_path).await?
+                }
             };
 
             for item in items {
@@ -93,6 +93,14 @@ impl VaultExportBusiness {
                         }
 
                         VaultClientEngine::Kv2(item) => {
+                            let data = item.find_all(&mount.name, &full_path).await?;
+                            let metadata = item.find_all_metadata(&mount.name, &full_path).await?;
+                            let cleaned_path = &full_path[1..];
+
+                            results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
+                        }
+
+                        VaultClientEngine::Cubbyhole(item) => {
                             let data = item.find_all(&mount.name, &full_path).await?;
                             let metadata = item.find_all_metadata(&mount.name, &full_path).await?;
                             let cleaned_path = &full_path[1..];

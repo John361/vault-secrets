@@ -5,7 +5,6 @@ use vaultrs::api::kv2::requests::SetSecretMetadataRequestBuilder;
 use vaultrs::kv2;
 
 use crate::secret::Secret;
-use crate::vault::VaultConnectionConfig;
 use crate::vault::client::VaultClientTrait;
 use crate::vault::model::VaultData;
 
@@ -16,18 +15,16 @@ pub struct VaultClientKv2 {
 }
 
 impl VaultClientKv2 {
-    pub async fn new(
-        connection: &VaultConnectionConfig,
+    pub fn new(
+        client: vaultrs::client::VaultClient,
         encode: bool,
         request_interval_ms: u64,
-    ) -> Result<Self> {
-        let client = Self::build_client(connection).await?;
-
-        Ok(Self {
+    ) -> Self {
+        Self {
             client,
             encode,
             request_interval_ms,
-        })
+        }
     }
 }
 
