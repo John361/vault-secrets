@@ -42,6 +42,7 @@ jobs:
         uses: softprops/action-gh-release@e5ee6bc58a36b838b92fc1217f2e4b414b5abcc8
         with:
           files: target/debian/*.deb
+          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -115,6 +116,7 @@ jobs:
         uses: taiki-e/create-gh-release-action@d95ab4c4dc917cfa4a7cfc6468a0e5267ede79ac
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
 
       - name: Upload assets
         uses: taiki-e/upload-rust-binary-action@14950759bde99e9dbc62b33fff358f17d1542832
@@ -132,3 +134,30 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             ext: ".exe"
+
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: [debian, binary, cargo]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
+        with:
+          fetch-depth: 0
+
+      - name: Get tag name
+        id: get_tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Publish Release
+        run: |
+          curl -X PATCH \
+            -H "Authorization: token ${GITHUB_TOKEN}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${REPOSITORY}/releases/tags/${TAG} \
+            -d '{"draft": false}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+          REPOSITORY: ${{ github.repository }}
+          TAG: ${{ steps.get_tag.outputs.tag }}
