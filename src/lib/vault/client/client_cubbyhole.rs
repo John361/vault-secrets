@@ -4,7 +4,6 @@ use anyhow::{Context, Result};
 use vaultrs::cubbyhole;
 
 use crate::secret::Secret;
-use crate::vault::VaultConnectionConfig;
 use crate::vault::client::VaultClientTrait;
 use crate::vault::model::VaultData;
 
@@ -15,18 +14,16 @@ pub struct VaultClientCubbyhole {
 }
 
 impl VaultClientCubbyhole {
-    pub async fn new(
-        connection: &VaultConnectionConfig,
+    pub fn new(
+        client: vaultrs::client::VaultClient,
         encode: bool,
         request_interval_ms: u64,
-    ) -> Result<Self> {
-        let client = Self::build_client(connection).await?;
-
-        Ok(Self {
+    ) -> Self {
+        Self {
             client,
             encode,
             request_interval_ms,
-        })
+        }
     }
 }
 

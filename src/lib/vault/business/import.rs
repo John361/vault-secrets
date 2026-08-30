@@ -4,11 +4,8 @@ use std::path::Path;
 use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
-use crate::cli::SecretEngineType;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::client::{
-    VaultClientCubbyhole, VaultClientKv1, VaultClientKv2, VaultClientTrait,
-};
+use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientTrait};
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
@@ -50,11 +47,16 @@ impl VaultImportBusiness {
     }
 
     async fn import_data(&self, mount: &VaultMountConfig, data: Vec<VaultData>) -> Result<()> {
-        match mount.engine {
-            SecretEngineType::Kv1 => {
-                let client =
-                    VaultClientKv1::new(&self.connection, false, self.request_interval_ms).await?;
+        let client = VaultClientKv1::build_client(
+            &mount.engine,
+            &self.connection,
+            false,
+            self.request_interval_ms,
+        )
+        .await?;
 
+        match client {
+            VaultClientEngine::Kv1(client) => {
                 client
                     .set_all(&mount.name, data.clone())
                     .await
@@ -66,10 +68,7 @@ impl VaultImportBusiness {
                     .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
             }
 
-            SecretEngineType::Kv2 => {
-                let client =
-                    VaultClientKv2::new(&self.connection, false, self.request_interval_ms).await?;
-
+            VaultClientEngine::Kv2(client) => {
                 client
                     .set_all(&mount.name, data.clone())
                     .await
@@ -81,11 +80,7 @@ impl VaultImportBusiness {
                     .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
             }
 
-            SecretEngineType::Cubbyhole => {
-                let client =
-                    VaultClientCubbyhole::new(&self.connection, false, self.request_interval_ms)
-                        .await?;
-
+            VaultClientEngine::Cubbyhole(client) => {
                 client
                     .set_all(&mount.name, data.clone())
                     .await

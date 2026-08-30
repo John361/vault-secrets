@@ -10,6 +10,7 @@ use vaultrs::sys::mount;
 use vaultrs_login::LoginClient;
 use vaultrs_login::engines::userpass::UserpassLogin;
 
+use crate::cli::SecretEngineType;
 use crate::secret::Secret;
 use crate::vault::client::{VaultClientCubbyhole, VaultClientKv1, VaultClientKv2};
 use crate::vault::model::VaultData;
@@ -17,8 +18,11 @@ use crate::vault::{VaultConnectionConfig, VaultConnectionModeConfig};
 
 pub trait VaultClientTrait: Sized {
     async fn build_client(
+        engine: &SecretEngineType,
         connection: &VaultConnectionConfig,
-    ) -> anyhow::Result<vaultrs::client::VaultClient> {
+        encode: bool,
+        request_interval_ms: u64,
+    ) -> anyhow::Result<VaultClientEngine> {
         let client_builder = match &connection.mode {
             VaultConnectionModeConfig::Token(value) => VaultClientSettingsBuilder::default()
                 .address(connection.address.clone())
@@ -46,6 +50,21 @@ pub trait VaultClientTrait: Sized {
                 .await
                 .with_context(|| "Failed to login to Vault")?;
         }
+
+        let client =
+            match engine {
+                SecretEngineType::Kv1 => {
+                    VaultClientEngine::Kv1(VaultClientKv1::new(client, encode, request_interval_ms))
+                }
+
+                SecretEngineType::Kv2 => {
+                    VaultClientEngine::Kv2(VaultClientKv2::new(client, encode, request_interval_ms))
+                }
+
+                SecretEngineType::Cubbyhole => VaultClientEngine::Cubbyhole(
+                    VaultClientCubbyhole::new(client, encode, request_interval_ms),
+                ),
+            };
 
         tracing::debug!("Vault connection initialized");
         Ok(client)
