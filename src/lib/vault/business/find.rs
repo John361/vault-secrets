@@ -3,7 +3,7 @@ use std::ops::Deref;
 use anyhow::Result;
 
 use crate::cli::SecretEngineType;
-use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientTrait};
+use crate::vault::client::VaultClient;
 use crate::vault::{VaultConnectionConfig, VaultFindConfig};
 
 pub struct VaultFindBusiness {
@@ -32,41 +32,18 @@ impl VaultFindBusiness {
         key: &str,
         engine: &SecretEngineType,
     ) -> Result<String> {
-        let client = VaultClientKv1::build_client(
-            engine,
+        let client = VaultClient::new(
             &self.connection,
+            engine.clone(),
             self.config.encode,
             self.request_interval_ms,
         )
         .await?;
+        let result = client
+            .find(mount, path, key)
+            .await
+            .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
 
-        match client {
-            VaultClientEngine::Kv1(client) => {
-                let result = client
-                    .find(mount, path, key)
-                    .await
-                    .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
-
-                Ok(result.deref().to_string())
-            }
-
-            VaultClientEngine::Kv2(client) => {
-                let result = client
-                    .find(mount, path, key)
-                    .await
-                    .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
-
-                Ok(result.deref().to_string())
-            }
-
-            VaultClientEngine::Cubbyhole(client) => {
-                let result = client
-                    .find(mount, path, key)
-                    .await
-                    .inspect(|_| tracing::debug!("Secret for {key} found at {path}"))?;
-
-                Ok(result.deref().to_string())
-            }
-        }
+        Ok(result.deref().to_string())
     }
 }
