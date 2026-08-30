@@ -5,7 +5,7 @@ use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientTrait};
+use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
@@ -47,51 +47,23 @@ impl VaultImportBusiness {
     }
 
     async fn import_data(&self, mount: &VaultMountConfig, data: Vec<VaultData>) -> Result<()> {
-        let client = VaultClientKv1::build_client(
-            &mount.engine,
+        let client = VaultClient::new(
             &self.connection,
+            mount.engine.clone(),
             false,
             self.request_interval_ms,
         )
         .await?;
 
-        match client {
-            VaultClientEngine::Kv1(client) => {
-                client
-                    .set_all(&mount.name, data.clone())
-                    .await
-                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
+        client
+            .set_all(&mount.name, data.clone())
+            .await
+            .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
 
-                client
-                    .set_all_metadata(&mount.name, data)
-                    .await
-                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
-            }
-
-            VaultClientEngine::Kv2(client) => {
-                client
-                    .set_all(&mount.name, data.clone())
-                    .await
-                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
-
-                client
-                    .set_all_metadata(&mount.name, data)
-                    .await
-                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
-            }
-
-            VaultClientEngine::Cubbyhole(client) => {
-                client
-                    .set_all(&mount.name, data.clone())
-                    .await
-                    .inspect(|_| tracing::debug!("Secrets imported to {}", mount.name))?;
-
-                client
-                    .set_all_metadata(&mount.name, data)
-                    .await
-                    .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
-            }
-        }
+        client
+            .set_all_metadata(&mount.name, data)
+            .await
+            .inspect(|_| tracing::debug!("Metadata imported to {}", mount.name))?;
 
         Ok(())
     }

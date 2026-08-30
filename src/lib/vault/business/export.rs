@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 
 use crate::FILE_EXTENSION;
 use crate::secret::{EncryptedSecret, Secret};
-use crate::vault::client::{VaultClientEngine, VaultClientKv1, VaultClientTrait};
+use crate::vault::client::VaultClient;
 use crate::vault::model::VaultData;
 use crate::vault::{VaultConnectionConfig, VaultMountConfig};
 
@@ -55,23 +55,16 @@ impl VaultExportBusiness {
     ) -> Result<Vec<VaultData>> {
         let mut results = Vec::new();
         let mut stack = vec![root_path.to_string()];
-
-        let client = VaultClientKv1::build_client(
-            &mount.engine,
+        let client = VaultClient::new(
             &self.connection,
+            mount.engine.clone(),
             false,
             self.request_interval_ms,
         )
         .await?;
 
         while let Some(current_path) = stack.pop() {
-            let items = match &client {
-                VaultClientEngine::Kv1(item) => item.list_paths(&mount.name, &current_path).await?,
-                VaultClientEngine::Kv2(item) => item.list_paths(&mount.name, &current_path).await?,
-                VaultClientEngine::Cubbyhole(item) => {
-                    item.list_paths(&mount.name, &current_path).await?
-                }
-            };
+            let items = client.list_paths(&mount.name, &current_path).await?;
 
             for item in items {
                 let full_path = if current_path.ends_with("/") {
@@ -83,31 +76,11 @@ impl VaultExportBusiness {
                 if item.ends_with("/") {
                     stack.push(full_path);
                 } else {
-                    match &client {
-                        VaultClientEngine::Kv1(item) => {
-                            let data = item.find_all(&mount.name, &full_path).await?;
-                            let metadata = item.find_all_metadata(&mount.name, &full_path).await?;
-                            let cleaned_path = &full_path[1..];
+                    let data = client.find_all(&mount.name, &full_path).await?;
+                    let metadata = client.find_all_metadata(&mount.name, &full_path).await?;
+                    let cleaned_path = &full_path[1..];
 
-                            results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
-                        }
-
-                        VaultClientEngine::Kv2(item) => {
-                            let data = item.find_all(&mount.name, &full_path).await?;
-                            let metadata = item.find_all_metadata(&mount.name, &full_path).await?;
-                            let cleaned_path = &full_path[1..];
-
-                            results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
-                        }
-
-                        VaultClientEngine::Cubbyhole(item) => {
-                            let data = item.find_all(&mount.name, &full_path).await?;
-                            let metadata = item.find_all_metadata(&mount.name, &full_path).await?;
-                            let cleaned_path = &full_path[1..];
-
-                            results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
-                        }
-                    }
+                    results.push(VaultData::new(cleaned_path.to_string(), data, metadata));
                 }
             }
         }
